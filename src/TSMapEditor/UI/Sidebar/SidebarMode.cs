@@ -5,11 +5,11 @@ namespace TSMapEditor.UI.Sidebar
     /// </summary>
     public enum SidebarMode
     {
+        Buildings,
         Infantry,
         Vehicles,
         Aircraft,
         Naval,
-        Buildings,
         TerrainObjects,
         Overlay,
         Smudges,

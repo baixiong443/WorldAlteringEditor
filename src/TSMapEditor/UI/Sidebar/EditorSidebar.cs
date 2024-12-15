@@ -37,11 +37,11 @@ namespace TSMapEditor.UI.Sidebar
 
         static List<string> sidebarModeNames = new List<string>
         {
+            "Buildings",
             "Infantry",
             "Vehicles",
             "Aircraft",
             "Naval",
-            "Buildings",
             "Terrain Objects",
             "Overlays",
             "Smudges"
@@ -70,6 +70,10 @@ namespace TSMapEditor.UI.Sidebar
             AddChild(lbSelection);
             lbSelection.EnableScrollbar = false;
 
+            var buildingListPanel = new BuildingListPanel(WindowManager, editorState, map, theaterGraphics, cursorActionTarget);
+            buildingListPanel.Name = nameof(buildingListPanel);
+            InitPanel(buildingListPanel);
+
             var infantryListPanel = new InfantryListPanel(WindowManager, editorState, map, theaterGraphics, cursorActionTarget);
             infantryListPanel.Name = nameof(infantryListPanel);
             InitPanel(infantryListPanel);
@@ -86,10 +90,6 @@ namespace TSMapEditor.UI.Sidebar
             navalUnitListPanel.Name = nameof(navalUnitListPanel);
             InitPanel(navalUnitListPanel);
 
-            var buildingListPanel = new BuildingListPanel(WindowManager, editorState, map, theaterGraphics, cursorActionTarget);
-            buildingListPanel.Name = nameof(buildingListPanel);
-            InitPanel(buildingListPanel);
-
             var terrainObjectListPanel = new TerrainObjectListPanel(WindowManager, editorState, map, theaterGraphics, cursorActionTarget);
             terrainObjectListPanel.Name = nameof(terrainObjectListPanel);
             InitPanel(terrainObjectListPanel);
@@ -104,11 +104,11 @@ namespace TSMapEditor.UI.Sidebar
 
             modePanels = new XNAPanel[]
             {
+                buildingListPanel,
                 infantryListPanel,
                 unitListPanel,
                 aircraftListPanel,
                 navalUnitListPanel,
-                buildingListPanel,
                 terrainObjectListPanel,
                 overlayListPanel,
                 smudgeListPanel
@@ -121,11 +121,11 @@ namespace TSMapEditor.UI.Sidebar
             // This is less extensible than using events, but with events we'd have to store
             // the delegates to be able to unsubscribe from them later on.
             // Thus, this results in neater code.
+            KeyboardCommands.Instance.BuildingMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Buildings;
             KeyboardCommands.Instance.InfantryMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Infantry;
             KeyboardCommands.Instance.VehicleMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Vehicles;
             KeyboardCommands.Instance.AircraftMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Aircraft;
             KeyboardCommands.Instance.NavalMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Naval;
-            KeyboardCommands.Instance.BuildingMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Buildings;
             KeyboardCommands.Instance.TerrainObjectMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.TerrainObjects;
             KeyboardCommands.Instance.OverlayMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Overlay;
             KeyboardCommands.Instance.SmudgeMenu.Action = () => lbSelection.SelectedIndex = (int)SidebarMode.Smudges;
