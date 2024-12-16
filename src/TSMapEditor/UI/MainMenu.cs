@@ -259,33 +259,61 @@ namespace TSMapEditor.UI
 
         private void ReadGameInstallDirectoryFromRegistry()
         {
+            string[] pathsToLookup = Constants.GameRegistryInstallPath.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+            if (pathsToLookup.Length == 0)
+            {
+                Logger.Log($"No valid paths specified in {nameof(Constants.GameRegistryInstallPath)}. Unable to read game installation path from Windows registry.");
+                return;
+            }
+
             try
             {
-                RegistryKey key;
+                foreach (string registryInstallPath in pathsToLookup)
+                {
+                    RegistryKey key;
 
-                if (Constants.InstallPathAtHKLM)
-                {
-                    key = Registry.LocalMachine.OpenSubKey(Constants.GameRegistryInstallPath);
-                }
-                else
-                {
-                    key = Registry.CurrentUser.OpenSubKey(Constants.GameRegistryInstallPath);
-                }
+                    const string hklmIdentifier = "HKLM:";
 
-                object value = key.GetValue("InstallPath", string.Empty);
-                if (!(value is string valueAsString))
-                {
-                    tbGameDirectory.Text = string.Empty;
-                }
-                else
-                {
-                    if (File.Exists(valueAsString))
-                        tbGameDirectory.Text = Path.GetDirectoryName(valueAsString);
+                    // By default, try to find the key from the current user's registry.
+                    // Optionally, if the path starts with the HKLM identifier, look for the key in the local machine's registry instead.
+                    if (registryInstallPath.StartsWith(hklmIdentifier))
+                    {
+                        key = Registry.LocalMachine.OpenSubKey(registryInstallPath.Substring(hklmIdentifier.Length));
+                    }
                     else
-                        tbGameDirectory.Text = valueAsString;
-                }
+                    {
+                        key = Registry.CurrentUser.OpenSubKey(registryInstallPath);
+                    }
 
-                key.Close();
+                    bool isValid = false;
+
+                    object value = key.GetValue("InstallPath", string.Empty);
+                    if (!(value is string valueAsString))
+                    {
+                        tbGameDirectory.Text = string.Empty;
+                    }
+                    else
+                    {
+                        if (File.Exists(valueAsString))
+                        {
+                            tbGameDirectory.Text = Path.GetDirectoryName(valueAsString);
+                        }
+                        else
+                        {
+                            tbGameDirectory.Text = valueAsString;
+                        }
+
+                        if (File.Exists(Path.Combine(tbGameDirectory.Text, Constants.ExpectedClientExecutableName)))
+                            isValid = true;
+                    }
+
+                    key.Close();
+
+                    // Break when we find the first valid installation path
+                    if (isValid)
+                        break;
+                }
             }
             catch (Exception ex)
             {
