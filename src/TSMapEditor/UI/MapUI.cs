@@ -636,8 +636,12 @@ namespace TSMapEditor.UI
             if (tile == null)
                 return;
 
+            BrushSize singleTileBrushSize = Map.EditorConfig.BrushSizes.Find(bs => bs.Width == 1 && bs.Height == 1);
+            if (singleTileBrushSize == null)
+                throw new InvalidOperationException($"{nameof(DeleteObjectFromCell)}: 1x1 sized brush not found!");
+
             if (Map.HasObjectToDelete(cellCoords, EditorState.DeletionMode))
-                MutationManager.PerformMutation(new DeleteObjectMutation(MutationTarget, tile.CoordsToPoint(), EditorState.DeletionMode));
+                MutationManager.PerformMutation(new DeleteObjectMutation(MutationTarget, tile.CoordsToPoint(), singleTileBrushSize, EditorState.DeletionMode));
 
             AddRefreshPoint(cellCoords, 2);
         }
