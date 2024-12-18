@@ -492,11 +492,11 @@ namespace TSMapEditor.UI
         {
             base.OnMouseMove();
 
-            if (CursorAction != null && leftPressedDownOnControl)
+            if (CursorAction != null)
             {
                 if (Cursor.LeftDown)
                 {
-                    if (tileUnderCursor != null)
+                    if (leftPressedDownOnControl && tileUnderCursor != null)
                     {
                         if (lastTileUnderCursor != tileUnderCursor || !CursorAction.OnlyUniqueCellEvents)
                             CursorAction.LeftDown(tileUnderCursor.CoordsToPoint());
