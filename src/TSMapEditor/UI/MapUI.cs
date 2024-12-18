@@ -151,6 +151,8 @@ namespace TSMapEditor.UI
         /// </summary>
         private bool leftPressedDownOnControl = false;
 
+        private int currentEventID = 0;
+
         private MapView mapView;
 
 
@@ -478,6 +480,12 @@ namespace TSMapEditor.UI
         {
             base.OnMouseLeftDown();
             leftPressedDownOnControl = true;
+
+            if (CursorAction != null)
+            {
+                currentEventID++;
+                CursorAction.EventID = currentEventID;
+            }
         }
 
         public override void OnMouseMove()
