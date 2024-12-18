@@ -29,6 +29,8 @@ namespace TSMapEditor.Mutations.Classes.HeightMutations
 
         private void FlattenGround()
         {
+            Clear();
+
             int xSize = BrushSize.Width;
             int ySize = BrushSize.Height;
 
