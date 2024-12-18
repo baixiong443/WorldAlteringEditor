@@ -49,6 +49,35 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 (height * Constants.DepthRenderStep);
         }
 
+        public override Point2D GetDrawPoint(Overlay gameObject)
+        {
+            if (gameObject.OverlayType.HighBridgeDirection == BridgeDirection.None)
+                return base.GetDrawPoint(gameObject);
+
+            Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, RenderDependencies.Map);
+
+            var mapCell = RenderDependencies.Map.GetTile(gameObject.Position);
+            int heightOffset = 0;
+
+            if (!RenderDependencies.EditorState.Is2DMode)
+            {
+                heightOffset = mapCell.Level * Constants.CellHeight;
+
+                if (gameObject.OverlayType.HighBridgeDirection == BridgeDirection.EastWest)
+                {
+                    heightOffset += Constants.CellHeight + 1;
+                }
+                else
+                {
+                    heightOffset += Constants.CellHeight * 2 + 1;
+                }
+            }
+
+            Point2D drawPoint = new Point2D(drawPointWithoutCellHeight.X, drawPointWithoutCellHeight.Y - heightOffset);
+
+            return drawPoint;
+        }
+
         protected override float GetDepthAddition(Overlay gameObject)
         {
             if (gameObject.OverlayType.HighBridgeDirection == BridgeDirection.None)
@@ -68,18 +97,6 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             Color remapColor = Color.White;
             if (gameObject.OverlayType.TiberiumType != null)
                 remapColor = gameObject.OverlayType.TiberiumType.XNAColor;
-
-            if (!RenderDependencies.EditorState.Is2DMode && gameObject.OverlayType.HighBridgeDirection != BridgeDirection.None)
-            {
-                if (gameObject.OverlayType.HighBridgeDirection == BridgeDirection.EastWest)
-                {
-                    drawPoint.Y -= Constants.CellHeight + 1;
-                }
-                else
-                {
-                    drawPoint.Y -= Constants.CellHeight * 2 + 1;
-                }
-            }
 
             bool affectedByLighting = drawParams.ShapeImage.SubjectToLighting;
             bool affectedByAmbient = !gameObject.OverlayType.Tiberium && !affectedByLighting;
