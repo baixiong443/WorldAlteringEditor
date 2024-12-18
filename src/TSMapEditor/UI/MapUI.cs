@@ -143,6 +143,14 @@ namespace TSMapEditor.UI
         private Point lastClickedPoint;
         private Point pressedDownPoint;
 
+        /// <summary>
+        /// Records whether the mouse was on the map UI when the left mouse button was pressed down.
+        /// If not, we should not send mousedown inputs to cursor actions when the mouse is moved;
+        /// the user is likely dragging a window or other control that can result in the cursor
+        /// temporarily entering this control's area with the left mouse button down.
+        /// </summary>
+        private bool leftPressedDownOnControl = false;
+
         private MapView mapView;
 
 
@@ -466,11 +474,17 @@ namespace TSMapEditor.UI
             base.OnMouseEnter();
         }
 
+        public override void OnMouseLeftDown()
+        {
+            base.OnMouseLeftDown();
+            leftPressedDownOnControl = true;
+        }
+
         public override void OnMouseMove()
         {
             base.OnMouseMove();
 
-            if (CursorAction != null)
+            if (CursorAction != null && leftPressedDownOnControl)
             {
                 if (Cursor.LeftDown)
                 {
@@ -569,6 +583,9 @@ namespace TSMapEditor.UI
             {
                 Camera.KeyboardUpdate(Keyboard, scrollRate);
             }
+
+            if (leftPressedDownOnControl && !Cursor.LeftDown)
+                leftPressedDownOnControl = false;
 
             windowController.MinimapWindow.CameraRectangle = new Rectangle(Camera.TopLeftPoint.ToXNAPoint(), new Point2D(Width, Height).ScaleBy(1.0 / Camera.ZoomLevel).ToXNAPoint());
 
