@@ -30,13 +30,13 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             int dy = drawingBounds.Bottom - cellPixelCoords.Y;
             int wholeCells = dy / Constants.CellSizeY;
             int fraction = dy % Constants.CellSizeY;
-            int cellY = cellPixelCoords.Y + (wholeCells + 1) * Constants.CellSizeY;
+            int objectPixelPositionY = cellPixelCoords.Y + (wholeCells + 1) * Constants.CellSizeY;
 
             if (fraction > (Constants.CellSizeY * 3) / 2 &&
                 (drawingBounds.X < cellPixelCoords.X || drawingBounds.Right > cellPixelCoords.X + Constants.CellSizeX))
             {
                 // This object leaks into the neighbouring cells - to another "isometric row"
-                cellY += Constants.CellSizeY / 2;
+                objectPixelPositionY += Constants.CellSizeY / 2;
             }
 
             // Use height from the cell where the object has been placed.
@@ -47,7 +47,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 height = heightLookupCell.Level;
             }
 
-            return ((cellY + (height * Constants.CellHeight)) / (float)Map.HeightInPixelsWithCellHeight) * Constants.DownwardsDepthRenderSpace +
+            return ((objectPixelPositionY + (height * Constants.CellHeight)) / (float)Map.HeightInPixelsWithCellHeight) * Constants.DownwardsDepthRenderSpace +
                 (height * Constants.DepthRenderStep);
         }
 
