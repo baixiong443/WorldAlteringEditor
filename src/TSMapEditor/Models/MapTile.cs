@@ -90,6 +90,10 @@ namespace TSMapEditor.Models
             // Check all the light sources and how they affect this light
             foreach (var source in LightSources)
             {
+                // Sources with intensity of 0.0 don't get any light applied
+                if (source.Source.ObjectType.LightIntensity == 0.0)
+                    continue;
+
                 double distanceRatio = 1.0 - (source.DistanceInLeptons / source.Source.ObjectType.LightVisibility);
 
                 // Intensity modifies the cell ambient value.
