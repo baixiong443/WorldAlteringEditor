@@ -28,7 +28,7 @@ namespace TSMapEditor
         public static bool WarnOfTooManyTriggerActions = true;
         public static bool DefaultPreview = false;
 
-        public static string ExpectedClientExecutableName = "DTA.exe";
+        public static string[] ExpectedClientExecutableNames = new string[] { "DTA.exe" };
         public static string GameRegistryInstallPath = "SOFTWARE\\DawnOfTheTiberiumAge";
         public static string OpenFileDialogFilter = "TS maps|*.map|All files|*.*";
 
@@ -143,7 +143,12 @@ namespace TSMapEditor
             WarnOfTooManyTriggerActions = constantsIni.GetBooleanValue(ConstantsSectionName, nameof(WarnOfTooManyTriggerActions), WarnOfTooManyTriggerActions);
             DefaultPreview = constantsIni.GetBooleanValue(ConstantsSectionName, nameof(DefaultPreview), DefaultPreview);
 
-            ExpectedClientExecutableName = constantsIni.GetStringValue(ConstantsSectionName, nameof(ExpectedClientExecutableName), ExpectedClientExecutableName);
+            // Check two keys for backwards compatibility
+            if (constantsIni.KeyExists(ConstantsSectionName, "ExpectedClientExecutableName"))
+                ExpectedClientExecutableNames = constantsIni.GetSection(ConstantsSectionName).GetListValue("ExpectedClientExecutableName", ',', s => s).ToArray();
+            else
+                ExpectedClientExecutableNames = constantsIni.GetSection(ConstantsSectionName).GetListValue(nameof(ExpectedClientExecutableNames), ',', s => s).ToArray();
+
             GameRegistryInstallPath = constantsIni.GetStringValue(ConstantsSectionName, nameof(GameRegistryInstallPath), GameRegistryInstallPath);
             OpenFileDialogFilter = constantsIni.GetStringValue(ConstantsSectionName, nameof(OpenFileDialogFilter), OpenFileDialogFilter);
 

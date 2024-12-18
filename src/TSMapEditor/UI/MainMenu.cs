@@ -68,8 +68,7 @@ namespace TSMapEditor.UI
 
 #if DEBUG
             // When debugging we might often switch between configs - make it a bit more convenient
-            string expectedPath = Path.Combine(tbGameDirectory.Text, Constants.ExpectedClientExecutableName);
-            if (!File.Exists(expectedPath))
+            if (!VerifyGameDirectory())
             {
                 ReadGameInstallDirectoryFromRegistry();
             }
@@ -304,8 +303,14 @@ namespace TSMapEditor.UI
                             tbGameDirectory.Text = valueAsString;
                         }
 
-                        if (File.Exists(Path.Combine(tbGameDirectory.Text, Constants.ExpectedClientExecutableName)))
-                            isValid = true;
+                        foreach (string expectedExecutableName in Constants.ExpectedClientExecutableNames)
+                        {
+                            if (File.Exists(Path.Combine(tbGameDirectory.Text, expectedExecutableName)))
+                            {
+                                isValid = true;
+                                break;
+                            }
+                        }
                     }
 
                     key.Close();
@@ -332,13 +337,28 @@ namespace TSMapEditor.UI
             BtnLoad_LeftClick(this, EventArgs.Empty);
         }
 
+        private bool VerifyGameDirectory()
+        {
+            bool gameDirectoryVerified = false;
+            foreach (string expectedExecutableName in Constants.ExpectedClientExecutableNames)
+            {
+                if (File.Exists(Path.Combine(tbGameDirectory.Text, expectedExecutableName)))
+                {
+                    gameDirectoryVerified = true;
+                    break;
+                }
+            }
+
+            return gameDirectoryVerified;
+        }
+
         private bool CheckGameDirectory()
         {
-            if (!File.Exists(Path.Combine(tbGameDirectory.Text, Constants.ExpectedClientExecutableName)))
+            if (!VerifyGameDirectory())
             {
                 EditorMessageBox.Show(WindowManager,
                     "Invalid game directory",
-                    $"{Constants.ExpectedClientExecutableName} not found, please check that you typed the correct game directory.",
+                    $"{Constants.ExpectedClientExecutableNames[0]} not found, please check that you typed the correct game directory.",
                     MessageBoxButtons.OK);
 
                 return false;
@@ -376,7 +396,7 @@ namespace TSMapEditor.UI
             {
                 openFileDialog.InitialDirectory = tbGameDirectory.Text;
                 openFileDialog.Filter =
-                    $"Game executable|{Constants.ExpectedClientExecutableName}";
+                    $"Game executable|{string.Join(';', Constants.ExpectedClientExecutableNames)}";
                 openFileDialog.RestoreDirectory = true;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
