@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using TSMapEditor.GameMath;
 using TSMapEditor.Models;
+using TSMapEditor.Models.Enums;
 
 namespace TSMapEditor.Rendering.ObjectRenderers
 {
@@ -47,6 +49,34 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
             return ((cellY + (height * Constants.CellHeight)) / (float)Map.HeightInPixelsWithCellHeight) * Constants.DownwardsDepthRenderSpace +
                 (height * Constants.DepthRenderStep);
+        }
+
+        protected override double GetExtraLight(Overlay gameObject)
+        {
+            if (gameObject.OverlayType.HighBridgeDirection != BridgeDirection.None && RenderDependencies.EditorState.IsLighting)
+            {
+                double level = 0.0;
+
+                switch (RenderDependencies.EditorState.LightingPreviewState)
+                {
+                    case LightingPreviewMode.Normal:
+                        level = Map.Lighting.Level;
+                        break;
+                    case LightingPreviewMode.IonStorm:
+                        level = Map.Lighting.IonLevel;
+                        break;
+                    case LightingPreviewMode.Dominator:
+                        level = Map.Lighting.DominatorLevel.GetValueOrDefault();
+                        break;
+                    default:
+                        throw new InvalidOperationException($"{nameof(OverlayRenderer)}.{nameof(GetExtraLight)}: Unknown lighting preview state");
+                }
+
+                const int highBridgeHeight = 4;
+                return level * highBridgeHeight;
+            }
+
+            return 0.0;
         }
 
         public override Point2D GetDrawPoint(Overlay gameObject)
