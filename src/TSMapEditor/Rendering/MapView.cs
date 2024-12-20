@@ -555,7 +555,7 @@ namespace TSMapEditor.Rendering
 
             if ((EditorState.RenderObjectFlags & RenderObjectFlags.Overlay) == RenderObjectFlags.Overlay && tile.Overlay != null && tile.Overlay.OverlayType != null)
             {
-                if (tile.Overlay.OverlayType.DrawFlat && tile.Overlay.OverlayType.HighBridgeDirection == BridgeDirection.None)
+                if (tile.Overlay.OverlayType.DrawFlat && tile.Overlay.OverlayType.HighBridgeDirection == BridgeDirection.None && !tile.Overlay.OverlayType.Wall)
                     AddFlatOverlayToRender(tile.Overlay);
                 else
                     AddGameObjectToRender(tile.Overlay);
