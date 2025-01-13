@@ -170,9 +170,9 @@ namespace TSMapEditor.UI
         /// </summary>
         public void InvalidateMapForMinimap() => mapView.InvalidateMapForMinimap();
 
-        public void AddPreviewToMap() => mapView.AddPreviewToMap();
+        public void AddPreviewToMap() => mapView.AddPreviewToMap(MegamapRenderOptions.All);
 
-        public void ExtractMegamapTo(string path) => mapView.ExtractMegamapTo(path);
+        public void ExtractMegamapTo(string path) => mapView.ExtractMegamapTo(MegamapRenderOptions.All, path);
 
         public override void Initialize()
         {

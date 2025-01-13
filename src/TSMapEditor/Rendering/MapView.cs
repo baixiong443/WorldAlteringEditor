@@ -1,9 +1,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rampastring.Tools;
 using Rampastring.XNAUI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using TSMapEditor.GameMath;
@@ -12,6 +14,7 @@ using TSMapEditor.Models.Enums;
 using TSMapEditor.Rendering.ObjectRenderers;
 using TSMapEditor.Settings;
 using TSMapEditor.UI;
+using TSMapEditor.UI.Windows;
 
 namespace TSMapEditor.Rendering
 {
@@ -438,7 +441,8 @@ namespace TSMapEditor.Rendering
             if ((EditorState.RenderObjectFlags & RenderObjectFlags.Waypoints) == RenderObjectFlags.Waypoints)
                 DrawWaypoints();
 
-            DrawTubes();
+            if ((EditorState.RenderObjectFlags & RenderObjectFlags.TunnelTubes) == RenderObjectFlags.TunnelTubes)
+                DrawTubes();
 
             if (EditorState.HighlightImpassableCells)
             {
@@ -1673,43 +1677,77 @@ namespace TSMapEditor.Rendering
             Renderer.PopSettings();
         }
 
-        public void AddPreviewToMap()
+        public void AddPreviewToMap(MegamapRenderOptions megamapRenderOptions)
         {
-            InstantRenderMinimap();
-
-            // Include only the part within LocalSize
-            var visibleRectangle = GetMapLocalViewRectangle();
-            var localSizeRenderTarget = new RenderTarget2D(GraphicsDevice, visibleRectangle.Width, visibleRectangle.Height, false, SurfaceFormat.Color, DepthFormat.None);
-            Renderer.BeginDraw();
-            Renderer.PushRenderTarget(localSizeRenderTarget);
-            Renderer.DrawTexture(MinimapTexture, visibleRectangle, new Rectangle(0, 0, localSizeRenderTarget.Width, localSizeRenderTarget.Height), Color.White);
-            Renderer.PopRenderTarget();
-            Renderer.EndDraw();
+            var megamapTexture = GenerateMegamapTexture(megamapRenderOptions);
 
             // Scale down the minimap texture
             var finalPreviewRenderTarget = new RenderTarget2D(GraphicsDevice, Constants.MapPreviewMaxWidth, Constants.MapPreviewMaxHeight, false, SurfaceFormat.Color, DepthFormat.None);
-            var minimapTexture = Helpers.RenderTextureAsSmaller(localSizeRenderTarget, finalPreviewRenderTarget, GraphicsDevice);
-
-            // Cleanup
-            localSizeRenderTarget.Dispose();
-            finalPreviewRenderTarget.Dispose();
-            MinimapUsers.Remove(this);
+            var minimapTexture = Helpers.RenderTextureAsSmaller(megamapTexture, finalPreviewRenderTarget, GraphicsDevice);
 
             Map.WritePreview(minimapTexture);
+
+            // Cleanup
+            megamapTexture.Dispose();
+            finalPreviewRenderTarget.Dispose();
+
             InvalidateMapForMinimap();
         }
 
-        public void ExtractMegamapTo(string path)
+        /// <summary>
+        /// Renders the entire map into a new render target and returns the render target as a texture.
+        /// </summary>
+        private Texture2D GenerateMegamapTexture(MegamapRenderOptions megamapRenderOptions)
         {
-            InstantRenderMinimap();
+            InstantRenderMegamap(megamapRenderOptions);
 
-            using (var stream = File.OpenWrite(path))
+            RenderTarget2D texture;
+            Rectangle sourceRectangle;
+
+            if (megamapRenderOptions.HasFlag(MegamapRenderOptions.IncludeOnlyVisibleArea))
             {
-                MinimapTexture.SaveAsPng(stream, MinimapTexture.Width, MinimapTexture.Height);
+                sourceRectangle = GetMapLocalViewRectangle();
             }
+            else
+            {
+                sourceRectangle = new Rectangle(0, 0, compositeRenderTarget.Width, compositeRenderTarget.Height);
+            }
+
+            texture = new RenderTarget2D(GraphicsDevice, sourceRectangle.Width, sourceRectangle.Height, false, SurfaceFormat.Color, DepthFormat.None);
+
+            Renderer.BeginDraw();
+            Renderer.PushRenderTarget(texture);
+            Renderer.DrawTexture(MinimapTexture, sourceRectangle, new Rectangle(0, 0, texture.Width, texture.Height), Color.White);
+            Renderer.PopRenderTarget();
+            Renderer.EndDraw();
+
+            return texture;
         }
 
-        private void InstantRenderMinimap()
+        public void ExtractMegamapTo(MegamapRenderOptions megamapRenderOptions, string path)
+        {
+            var megamapTexture = GenerateMegamapTexture(megamapRenderOptions);
+
+            try
+            {
+                using (var stream = File.OpenWrite(path))
+                {
+                    megamapTexture.SaveAsPng(stream, megamapTexture.Width, megamapTexture.Height);
+                }
+            }
+            catch (IOException ex)
+            {
+                Logger.Log("Failed to extract megamap texture. Returned error message: " + ex.Message);
+                Logger.Log("Stacktrace: " + ex.StackTrace);
+
+                EditorMessageBox.Show(windowManager, "Failed to extract megamap",
+                    "Error encountered while attempting to extract megamap. Returned operating system error message: " + ex.Message, MessageBoxButtons.OK);
+            }
+
+            megamapTexture.Dispose();
+        }
+
+        private void InstantRenderMegamap(MegamapRenderOptions megamapRenderOptions)
         {
             EditorState.RenderInvisibleInGameObjects = false;
 
@@ -1723,16 +1761,56 @@ namespace TSMapEditor.Rendering
             GraphicsDevice.Clear(Color.Transparent);
             Renderer.PopRenderTarget();
 
-            // Maybe someone could want to generate a preview with these for some reason...?
-            // EditorState.Is2DMode = false;
-            // EditorState.IsMarbleMadness = false;
-            // EditorState.LightingPreviewState = LightingPreviewMode.Normal;
-            // EditorState.DrawMapWideOverlay = false;
+            // Emphasize cells with resources if that was requested
+            if (megamapRenderOptions.HasFlag(MegamapRenderOptions.EmphasizeResources))
+            {
+                Map.DoForAllValidTiles(cell =>
+                {
+                    if (cell.Overlay != null && cell.Overlay.OverlayType.TiberiumType != null)
+                    {
+                        var tiberiumType = cell.Overlay.OverlayType.TiberiumType;
+                        cell.CellLighting = new MapColor(tiberiumType.XNAColor.R / 128.0f, tiberiumType.XNAColor.G / 128.0f, tiberiumType.XNAColor.B / 128.0f);
+                    }
+                });
+            }
 
             InvalidateMapForMinimap();
             DrawVisibleMapPortion();
             CalculateMapRenderRectangles();
             DrawWorld();
+
+            // Mark player spots if that was requested
+            if (megamapRenderOptions.HasFlag(MegamapRenderOptions.MarkPlayerSpots))
+            {
+                Renderer.PushRenderTarget(compositeRenderTarget);
+
+                for (int i = 0; i < Constants.MultiplayerMaxPlayers; i++)
+                {
+                    var wp = Map.Waypoints.Find(wp => wp.Identifier == i);
+                    if (wp != null)
+                    {
+                        var wpCenterPoint = EditorState.Is2DMode ? CellMath.CellCenterPointFromCellCoords(wp.Position, Map) :
+                            CellMath.CellCenterPointFromCellCoords_3D(wp.Position, Map);
+
+                        var wpRectangle = new Rectangle(wpCenterPoint.X - (int)(Constants.CellSizeX * 1.5),
+                            wpCenterPoint.Y - (int)(Constants.CellSizeY * 1.5), Constants.CellSizeX * 3, Constants.CellSizeY * 3);
+
+                        Renderer.DrawTexture(EditorGraphics.GenericTileWithBorderTexture, wpRectangle, Color.Red);
+
+                        string wpString = wp.Identifier.ToString(CultureInfo.InvariantCulture);
+                        float scale = Constants.IsRA2YR ? 5.25f : 5.0f;
+
+                        var stringSize = Renderer.GetTextDimensions(wpString, Constants.UIBoldFont) * scale;
+                        Renderer.DrawString(wpString, Constants.UIBoldFont,
+                            new Vector2(wpRectangle.X + (wpRectangle.Width - stringSize.X) / 2,
+                            wpRectangle.Y + (wpRectangle.Height - stringSize.Y) / 2),
+                            Color.White, scale, 0f);
+                    }
+                }
+
+                Renderer.PopRenderTarget();
+            }
+
             DrawOnMinimap();
 
             mapInvalidated = false;
@@ -1741,6 +1819,11 @@ namespace TSMapEditor.Rendering
             Renderer.EndDraw();
 
             MinimapUsers.Remove(this);
+
+            if (megamapRenderOptions.HasFlag(MegamapRenderOptions.EmphasizeResources))
+            {
+                LightingChanged();
+            }
 
             EditorState.RenderInvisibleInGameObjects = true;
         }

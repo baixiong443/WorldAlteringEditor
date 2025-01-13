@@ -114,6 +114,8 @@ namespace TSMapEditor
         public const string VeinholeMonsterTypeName = "VEINHOLE";
         public const string VeinholeDummyTypeName = "VEINHOLEDUMMY";
 
+        public const int MultiplayerMaxPlayers = 8;
+
         public static void Init()
         {
             const string ConstantsSectionName = "Constants";
