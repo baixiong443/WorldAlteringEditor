@@ -116,6 +116,8 @@ namespace TSMapEditor
 
         public const int MultiplayerMaxPlayers = 8;
 
+        public const int TS_WAYPT_SPECIAL = 100;
+
         public static void Init()
         {
             const string ConstantsSectionName = "Constants";
