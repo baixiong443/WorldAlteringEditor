@@ -387,6 +387,15 @@ namespace TSMapEditor
                     houseType.Side = side;
                     break;
                 }
+
+                if (side.EndsWith("Side") && side.Length > 4)
+                {
+                    if (houseType.ININame.StartsWith(side[..4]))
+                    {
+                        houseType.Side = side;
+                        break;
+                    }
+                }
             }
 
             if (string.IsNullOrWhiteSpace(houseType.Side))
