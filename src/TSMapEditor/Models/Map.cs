@@ -42,6 +42,17 @@ namespace TSMapEditor.Models
         public event EventHandler PreSave;
         public event EventHandler PostSave;
 
+        /// <summary>
+        /// Raised when TaskForces are added or removed.
+        /// NOT raised when an individual TaskForce's data is modified.
+        /// </summary>
+        public event EventHandler TaskForcesChanged;
+
+        /// <summary>
+        /// Raised when TeamTypes are added or removed.
+        /// NOT raised when an individual TeamType's data is modified.
+        /// </summary>
+        public event EventHandler TeamTypesChanged;
 
         public IniFile LoadedINI { get; private set; }
 
@@ -727,6 +738,7 @@ namespace TSMapEditor.Models
         public void AddTaskForce(TaskForce taskForce)
         {
             TaskForces.Add(taskForce);
+            TaskForcesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void RemoveTaskForce(TaskForce taskForce)
@@ -734,6 +746,7 @@ namespace TSMapEditor.Models
             TaskForces.Remove(taskForce);
             TeamTypes.FindAll(tt => tt.TaskForce == taskForce).ForEach(tt => tt.TaskForce = null);
             LoadedINI.RemoveSection(taskForce.ININame);
+            TaskForcesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void ClearTaskForces()
@@ -790,12 +803,14 @@ namespace TSMapEditor.Models
         public void AddTeamType(TeamType teamType)
         {
             TeamTypes.Add(teamType);
+            TeamTypesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void RemoveTeamType(TeamType teamType)
         {
             TeamTypes.Remove(teamType);
             LoadedINI.RemoveSection(teamType.ININame);
+            TeamTypesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void AddHouseType(HouseType houseType)
