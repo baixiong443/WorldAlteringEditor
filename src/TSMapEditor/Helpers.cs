@@ -406,6 +406,13 @@ namespace TSMapEditor
 
         public static string NormalizePath(string path)
         {
+            if (path.Contains("../") || path.Contains("..\\"))
+            {
+                return Path.GetFullPath(path)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    .ToUpperInvariant();
+            }
+
             return Path.GetFullPath(new Uri(path).LocalPath)
                 .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 .ToUpperInvariant();
