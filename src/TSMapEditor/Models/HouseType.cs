@@ -11,6 +11,8 @@ namespace TSMapEditor.Models
     /// </summary>
     public class HouseType : AbstractObject, INIDefined
     {
+        public const double MultiplierDefaultValue = 1.0;
+
         public HouseType(string iniName)
         {
             ININame = iniName;
@@ -82,6 +84,20 @@ namespace TSMapEditor.Models
 
         public void WriteToIniSection(IniSection iniSection)
         {
+            foreach (var property in GetType().GetProperties())
+            {
+                if (property.PropertyType == typeof(float?))
+                {
+                    if ((float?)property.GetValue(this) == (float)MultiplierDefaultValue)
+                        property.SetValue(this, null);
+                }
+                else if (property.PropertyType == typeof(double?))
+                {
+                    if ((double?)property.GetValue(this) == MultiplierDefaultValue)
+                        property.SetValue(this, null);
+                }
+            }
+
             WritePropertiesToIniSection(iniSection);
         }
 
