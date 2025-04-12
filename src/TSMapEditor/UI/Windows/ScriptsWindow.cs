@@ -481,7 +481,7 @@ namespace TSMapEditor.UI.Windows
             LbActions_SelectedIndexChanged(this, EventArgs.Empty);
 
             // Reduce chance of the user accidentally using buttons to edit scripts after the script action selection window has been hidden
-            IgnoreInputOnFrame = true;
+            InputIgnoreTime = TimeSpan.FromSeconds(Constants.UIAccidentalClickPreventionTime);
         }
 
         private void LbActions_SelectedIndexChanged(object sender, EventArgs e)

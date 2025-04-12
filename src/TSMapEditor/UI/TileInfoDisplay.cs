@@ -78,19 +78,19 @@ namespace TSMapEditor.UI
 
             if (editorState.CursorAction != null)
             {
-                textRenderer.AddTextLine(new XNATextPart("Selected tool: ", Constants.UIDefaultFont, subtleTextColor));
-                textRenderer.AddTextPart(new XNATextPart(editorState.CursorAction.GetName(), Constants.UIDefaultFont, baseTextColor));
+                textRenderer.AddTextPart(new XNATextPart("Selected tool: ", Constants.UIDefaultFont, subtleTextColor));
+                textRenderer.AddTextPart(new XNATextPart(editorState.CursorAction.GetName() + Environment.NewLine, Constants.UIDefaultFont, baseTextColor));
             }
             else
             {
-                textRenderer.AddTextLine(new XNATextPart("No tool selected", Constants.UIDefaultFont, subtleTextColor));
+                textRenderer.AddTextPart(new XNATextPart("No tool selected" + Environment.NewLine, Constants.UIDefaultFont, subtleTextColor));
             }
 
-            textRenderer.AddTextLine(new XNATextPart(MapTile.X + ", " + MapTile.Y, Constants.UIDefaultFont, baseTextColor));
+            textRenderer.AddTextPart(new XNATextPart(MapTile.X + ", " + MapTile.Y + Environment.NewLine, Constants.UIDefaultFont, baseTextColor));
 
             TileImage tileGraphics = theaterGraphics.GetTileGraphics(MapTile.TileIndex);
             TileSet tileSet = theaterGraphics.Theater.TileSets[tileGraphics.TileSetId];
-            textRenderer.AddTextLine(new XNATextPart("TileSet: ", Constants.UIDefaultFont, subtleTextColor));
+            textRenderer.AddTextPart(new XNATextPart("TileSet: ", Constants.UIDefaultFont, subtleTextColor));
             textRenderer.AddTextPart(new XNATextPart(tileSet.SetName + " (" + tileGraphics.TileSetId + ")", Constants.UIDefaultFont, baseTextColor));
             textRenderer.AddTextPart(new XNATextPart("Tile #: ", Constants.UIDefaultFont, subtleTextColor));
             textRenderer.AddTextPart(new XNATextPart((MapTile.TileIndex - tileSet.StartTileIndex).ToString(CultureInfo.InvariantCulture), Constants.UIDefaultFont, baseTextColor));
