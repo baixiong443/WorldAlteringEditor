@@ -23,6 +23,11 @@ namespace TSMapEditor.Mutations.Classes
         private Point2D clonePosition;
         private AbstractObject placedClone;
 
+        public override string GetDisplayString()
+        {
+            return $"Clone {objectToClone.WhatAmI()} to {clonePosition}";
+        }
+
         private void CloneObject()
         {
             var clone = objectToClone.Clone();

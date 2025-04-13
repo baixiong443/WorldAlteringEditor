@@ -48,6 +48,11 @@ namespace TSMapEditor.Mutations.Classes
             MutationTarget.AddRefreshPoint(oldPosition);
         }
 
+        public override string GetDisplayString()
+        {
+            return $"Move {movable.WhatAmI()} from {oldPosition} to {newPosition}";
+        }
+
         public override void Perform()
         {
             // TODO handle sub-cell for infantry
