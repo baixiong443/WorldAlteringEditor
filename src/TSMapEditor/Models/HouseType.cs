@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Rampastring.Tools;
+using System;
 
 namespace TSMapEditor.Models
 {
@@ -99,6 +100,23 @@ namespace TSMapEditor.Models
             }
 
             WritePropertiesToIniSection(iniSection);
+        }
+
+        public void EraseFromIniFile(IniFile iniFile)
+        {
+            if (string.IsNullOrWhiteSpace(ININame))
+                return;
+
+            ArgumentNullException.ThrowIfNull(iniFile);
+
+            var section = iniFile.GetSection(ININame);
+            if (section == null)
+                return;
+
+            ErasePropertiesFromIniSection(section);
+
+            if (section.Keys.Count == 0)
+                iniFile.RemoveSection(ININame);
         }
 
         public void CopyBasicPropertiesFrom(HouseType other)
