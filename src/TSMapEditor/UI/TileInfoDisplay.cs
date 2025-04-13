@@ -250,7 +250,6 @@ namespace TSMapEditor.UI
 
         private void AddObjectInformation<T>(string objectTypeLabel, Techno<T> techno) where T : TechnoType
         {
-            textRenderer.AddTextPart(new XNATextPart(Environment.NewLine));
             textRenderer.AddTextLine(new XNATextPart(objectTypeLabel,
                 Constants.UIDefaultFont, Color.Gray));
             textRenderer.AddTextPart(new XNATextPart(techno.ObjectType.Name + " (" + techno.ObjectType.ININame + "), Owner:",
