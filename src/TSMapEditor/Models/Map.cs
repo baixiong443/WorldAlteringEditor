@@ -330,6 +330,12 @@ namespace TSMapEditor.Models
         private void ReloadSections()
         {
             MapLoader.ReadBasicSection(this, LoadedINI);
+
+            // Refresh light posts in case they got their INI config changed - saves the user
+            // from having to reload the map to refresh lighting changes
+            Rules.BuildingTypes.ForEach(bt => initializer.ReadObjectTypePropertiesFromINI(bt, LoadedINI));
+            Structures.ForEach(s => s.LightTiles(Tiles));
+
             Lighting.ReadFromIniFile(LoadedINI);
         }
 
