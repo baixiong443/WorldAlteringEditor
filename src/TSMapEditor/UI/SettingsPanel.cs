@@ -80,6 +80,7 @@ namespace TSMapEditor.UI
         private XNADropDown ddScrollRate;
         private XNACheckBox chkUseBoldFont;
         private XNACheckBox chkGraphicsLevel;
+        private XNACheckBox chkSmartScriptActionCloning;
         private EditorTextBox tbTextEditorPath;
 
         public override void Kill()
@@ -185,11 +186,18 @@ namespace TSMapEditor.UI
             chkGraphicsLevel.Text = "Enhanced Graphical Quality";
             AddChild(chkGraphicsLevel);
 
+            chkSmartScriptActionCloning = new XNACheckBox(WindowManager);
+            chkSmartScriptActionCloning.Name = nameof(chkSmartScriptActionCloning);
+            chkSmartScriptActionCloning.X = Constants.UIEmptySideSpace;
+            chkSmartScriptActionCloning.Y = chkGraphicsLevel.Bottom + Constants.UIVerticalSpacing;
+            chkSmartScriptActionCloning.Text = "Smart Script Action Cloning";
+            AddChild(chkSmartScriptActionCloning);
+
             var lblTextEditorPath = new XNALabel(WindowManager);
             lblTextEditorPath.Name = nameof(lblTextEditorPath);
             lblTextEditorPath.Text = "Text Editor Path:";
             lblTextEditorPath.X = Constants.UIEmptySideSpace;
-            lblTextEditorPath.Y = chkGraphicsLevel.Bottom + Constants.UIVerticalSpacing * 2;
+            lblTextEditorPath.Y = chkSmartScriptActionCloning.Bottom + Constants.UIVerticalSpacing * 2;
             AddChild(lblTextEditorPath);
 
             tbTextEditorPath = new EditorTextBox(WindowManager);
@@ -220,6 +228,7 @@ namespace TSMapEditor.UI
             chkBorderless.Checked = userSettings.Borderless;
             chkUseBoldFont.Checked = userSettings.UseBoldFont;
             chkGraphicsLevel.Checked = userSettings.GraphicsLevel > 0;
+            chkSmartScriptActionCloning.Checked = userSettings.SmartScriptActionCloning;
 
             tbTextEditorPath.Text = userSettings.TextEditorPath;
         }
@@ -230,6 +239,7 @@ namespace TSMapEditor.UI
 
             userSettings.UseBoldFont.UserDefinedValue = chkUseBoldFont.Checked;
             userSettings.GraphicsLevel.UserDefinedValue = chkGraphicsLevel.Checked ? 1 : 0;
+            userSettings.SmartScriptActionCloning.UserDefinedValue = chkSmartScriptActionCloning.Checked;
 
             userSettings.Theme.UserDefinedValue = ddTheme.SelectedItem.Text;
             if (ddScrollRate.SelectedItem != null)
