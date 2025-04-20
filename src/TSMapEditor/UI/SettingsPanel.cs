@@ -75,6 +75,7 @@ namespace TSMapEditor.UI
         }
 
         private XNADropDown ddRenderScale;
+        private XNADropDown ddTargetFPS;
         private XNACheckBox chkBorderless;
         private XNADropDown ddTheme;
         private XNADropDown ddScrollRate;
@@ -129,11 +130,28 @@ namespace TSMapEditor.UI
                 }
             }
 
+            var lblTargetFPS = new XNALabel(WindowManager);
+            lblTargetFPS.Name = nameof(lblTargetFPS);
+            lblTargetFPS.Text = "Target FPS:";
+            lblTargetFPS.X = Constants.UIEmptySideSpace;
+            lblTargetFPS.Y = ddRenderScale.Bottom + Constants.UIEmptyTopSpace + 1;
+            AddChild(lblTargetFPS);
+
+            ddTargetFPS = new XNADropDown(WindowManager);
+            ddTargetFPS.Name = nameof(ddTargetFPS);
+            ddTargetFPS.X = ddRenderScale.X;
+            ddTargetFPS.Y = lblTargetFPS.Y - 1;
+            ddTargetFPS.Width = ddRenderScale.Width;
+            AddChild(ddTargetFPS);
+            var targetFramerates = new int[] { 1000, 480, 240, 144, 120, 90, 75, 60, 30, 20 };
+            foreach (int frameRate in targetFramerates)
+                ddTargetFPS.AddItem(new XNADropDownItem() { Text = frameRate.ToString(CultureInfo.InvariantCulture), Tag = frameRate });
+
             var lblTheme = new XNALabel(WindowManager);
             lblTheme.Name = nameof(lblTheme);
             lblTheme.Text = "Theme:";
             lblTheme.X = lblRenderScale.X;
-            lblTheme.Y = ddRenderScale.Bottom + Constants.UIEmptyTopSpace;
+            lblTheme.Y = ddTargetFPS.Bottom + Constants.UIEmptyTopSpace;
             AddChild(lblTheme);
 
             ddTheme = new XNADropDown(WindowManager);
@@ -218,6 +236,7 @@ namespace TSMapEditor.UI
             var userSettings = UserSettings.Instance;
 
             ddRenderScale.SelectedIndex = ddRenderScale.Items.FindIndex(i => (double)i.Tag == userSettings.RenderScale.GetValue());
+            ddTargetFPS.SelectedIndex = ddTargetFPS.Items.FindIndex(item => (int)item.Tag == userSettings.TargetFPS.GetValue());
 
             int selectedTheme = ddTheme.Items.FindIndex(i => i.Text == userSettings.Theme);
             if (selectedTheme == -1)
@@ -249,8 +268,12 @@ namespace TSMapEditor.UI
             userSettings.FullscreenWindowed.UserDefinedValue = chkBorderless.Checked;
 
             if (ddRenderScale.SelectedItem != null)
-            {
                 userSettings.RenderScale.UserDefinedValue = (double)ddRenderScale.SelectedItem.Tag;
+
+            if (ddTargetFPS.SelectedItem != null)
+            {
+                userSettings.TargetFPS.UserDefinedValue = (int)ddTargetFPS.SelectedItem.Tag;
+                WindowManager.Game.TargetElapsedTime = TimeSpan.FromMilliseconds(1000.0 / UserSettings.Instance.TargetFPS);
             }
 
             userSettings.TextEditorPath.UserDefinedValue = tbTextEditorPath.Text;
