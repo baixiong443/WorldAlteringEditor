@@ -39,6 +39,7 @@ namespace TSMapEditor.Models
         public event EventHandler<CellLightingEventArgs> CellLightingModified;
         public event EventHandler MapManuallySaved;
         public event EventHandler MapAutoSaved;
+        public event EventHandler MapSaveFailed;
         public event EventHandler PreSave;
         public event EventHandler PostSave;
 
@@ -385,7 +386,16 @@ namespace TSMapEditor.Models
 
             string savePath = filePath ?? LoadedINI.FileName;
 
-            LoadedINI.WriteIniFile(savePath);
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+                LoadedINI.WriteIniFile(savePath);
+            }
+            catch (IOException ex)
+            {
+                Logger.Log($"Saving map failed! Path: {savePath}, exception message: {ex.Message}");
+                MapSaveFailed?.Invoke(ex, EventArgs.Empty);
+            }
 
             PostSave?.Invoke(this, EventArgs.Empty);
         }
