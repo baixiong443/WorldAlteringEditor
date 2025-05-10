@@ -263,7 +263,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 // Final brightness contribution
                 float brightness = diffuse + specular;
 
-                byte page = Math.Clamp((byte)(brightness * 16.0), (byte)0, (byte)255);
+                byte page = (byte)Math.Clamp(brightness * 16.0, 0, 255);
 
                 normalIndexToVplPage[i] = page;
             }
