@@ -313,19 +313,19 @@ namespace TSMapEditor.Models
 
                     var defaultOverlays = rules.OverlayTypes.Slice(TiberiumImageToOverlays[tiberiumType.Image].StartIndex, TiberiumImageToOverlays[tiberiumType.Image].Count);
                     tiberiumType.Overlays.AddRange(defaultOverlays);
-                    defaultOverlays.ForEach(ot =>
+                    foreach (var overlayType in defaultOverlays)
                     {
-                        if (ot.TiberiumType == null)
+                        if (overlayType.TiberiumType == null)
                         {
-                            ot.TiberiumType = tiberiumType;
+                            overlayType.TiberiumType = tiberiumType;
                         }
                         else
                         {
                             throw new INIConfigException(
-                                $"OverlayType {ot.ININame} is already associated with Tiberium {ot.TiberiumType.Index} ({ot.TiberiumType.ININame}), " +
+                                $"OverlayType {overlayType.ININame} is already associated with Tiberium {overlayType.TiberiumType.Index} ({overlayType.TiberiumType.ININame}), " +
                                 $"but it is also set to be associated with Tiberium {tiberiumType.Index} ({tiberiumType.ININame})!");
                         }
-                    });
+                    }
 
                     continue;
                 }
