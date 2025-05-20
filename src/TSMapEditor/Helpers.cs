@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using TSMapEditor.CCEngine;
+using TSMapEditor.Extensions;
 using TSMapEditor.GameMath;
 using TSMapEditor.Models;
 using TSMapEditor.Models.Enums;
@@ -746,6 +748,17 @@ namespace TSMapEditor
                 return new IniFile(customPath);
 
             return new IniFile(defaultPath);
+        }
+
+        public static IniFileEx ReadConfigINIEx(string path, CCFileManager fileManager)
+        {
+            string customPath = Path.Combine(Environment.CurrentDirectory, "Config", path);
+            string defaultPath = Path.Combine(Environment.CurrentDirectory, "Config", "Default", path);
+
+            if (File.Exists(customPath))
+                return new IniFileEx(customPath, fileManager);
+
+            return new IniFileEx(defaultPath, fileManager);
         }
     }
 }

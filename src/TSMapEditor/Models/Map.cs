@@ -229,7 +229,7 @@ namespace TSMapEditor.Models
             InitEditorConfig();
             InitializeRules(gameConfigINIFiles);
             LoadedINI = new IniFileEx();
-            var baseMap = new IniFileEx(Environment.CurrentDirectory + "/Config/BaseMap.ini", ccFileManager);
+            var baseMap = Helpers.ReadConfigINIEx("BaseMap.ini", ccFileManager);
             baseMap.RemoveSection("INISystem");
             baseMap.FileName = string.Empty;
             baseMap.SetStringValue("Map", "Theater", theaterName);
