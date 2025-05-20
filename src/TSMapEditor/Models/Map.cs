@@ -1570,7 +1570,7 @@ namespace TSMapEditor.Models
                     Rules.InitArt(gameConfigINIFiles.ArtFSIni, initializer);
             }
 
-            var editorRulesIni = new IniFile(Environment.CurrentDirectory + "/Config/EditorRules.ini");
+            var editorRulesIni = Helpers.ReadConfigINI("EditorRules.ini");
             Rules.InitEditorOverrides(editorRulesIni);
 
             Rules.InitFromINI(editorRulesIni, initializer, false);

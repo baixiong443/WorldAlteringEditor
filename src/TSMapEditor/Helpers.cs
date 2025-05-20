@@ -736,5 +736,16 @@ namespace TSMapEditor
 
             return false;
         }
+
+        public static IniFile ReadConfigINI(string path)
+        {
+            string customPath = Path.Combine(Environment.CurrentDirectory, "Config", path);
+            string defaultPath = Path.Combine(Environment.CurrentDirectory, "Config", "Default", path);
+
+            if (File.Exists(customPath))
+                return new IniFile(customPath);
+
+            return new IniFile(defaultPath);
+        }
     }
 }
