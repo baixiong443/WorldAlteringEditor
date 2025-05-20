@@ -5,7 +5,7 @@ namespace TSMapEditor
 {
     public static class Constants
     {
-        public const string ReleaseVersion = "1.4.9";
+        public const string ReleaseVersion = "1.4.10";
 
         public static int CellSizeX = 48;
         public static int CellSizeY = 24;
@@ -186,7 +186,7 @@ namespace TSMapEditor
 
         public static void InitUIConstants()
         {
-            IniFile uiConstantsIni = Helpers.ReadConfigINI("UIConstants.ini");
+            IniFile uiConstantsIni = Helpers.ReadConfigINI("UI/UIConstants.ini");
 
             UITreeViewLineHeight = uiConstantsIni.GetIntValue("UI", nameof(UITreeViewLineHeight), UITreeViewLineHeight);
         }
