@@ -66,9 +66,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
         public bool IsWithinCamera(T gameObject)
         {
-            Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, RenderDependencies.Map);
+            Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, Map);
 
-            var mapCell = RenderDependencies.Map.GetTile(gameObject.Position);
+            var mapCell = Map.GetTile(gameObject.Position);
             int heightOffset = RenderDependencies.EditorState.Is2DMode ? 0 : mapCell.Level * Constants.CellHeight;
             Point2D drawPoint = new Point2D(drawPointWithoutCellHeight.X, drawPointWithoutCellHeight.Y - heightOffset);
 
@@ -87,9 +87,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
         public virtual Point2D GetDrawPoint(T gameObject)
         {
-            Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, RenderDependencies.Map);
+            Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, Map);
 
-            var mapCell = RenderDependencies.Map.GetTile(gameObject.Position);
+            var mapCell = Map.GetTile(gameObject.Position);
             int heightOffset = RenderDependencies.EditorState.Is2DMode ? 0 : mapCell.Level * Constants.CellHeight;
             Point2D drawPoint = new Point2D(drawPointWithoutCellHeight.X, drawPointWithoutCellHeight.Y - heightOffset);
 
@@ -117,9 +117,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
         {
             if (ShouldRenderReplacementText(gameObject))
             {
-                Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, RenderDependencies.Map);
+                Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, Map);
 
-                var mapCell = RenderDependencies.Map.GetTile(gameObject.Position);
+                var mapCell = Map.GetTile(gameObject.Position);
                 int heightOffset = RenderDependencies.EditorState.Is2DMode ? 0 : mapCell.Level * Constants.CellHeight;
                 Point2D drawPoint = new Point2D(drawPointWithoutCellHeight.X, drawPointWithoutCellHeight.Y - heightOffset);
 
