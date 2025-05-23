@@ -1584,7 +1584,7 @@ namespace TSMapEditor.Models
                 Rules.InitAI(gameConfigINIFiles.AIFSIni, EditorConfig.TeamTypeFlags);
 
             // Load impassable cell information for terrain types
-            var impassableTerrainObjectsIni = new IniFile(Environment.CurrentDirectory + "/Config/TerrainTypeImpassability.ini");
+            var impassableTerrainObjectsIni = Helpers.ReadConfigINI("TerrainTypeImpassability.ini");
 
             Rules.TerrainTypes.ForEach(tt =>
             {
