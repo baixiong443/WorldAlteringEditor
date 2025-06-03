@@ -553,7 +553,7 @@ namespace TSMapEditor.Rendering
                         {
                             if (v == 0)
                             {
-                                tileGraphics.Add(new TileImage(0, 0, tsId, i, currentTileIndex, new MGTMPImage[0]));
+                                tileGraphics.Add(new TileImage(0, 0, tsId, i, currentTileIndex, Array.Empty<MGTMPImage>()));
                                 break;
                             }
                             else
