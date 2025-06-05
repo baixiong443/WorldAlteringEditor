@@ -77,6 +77,8 @@ namespace TSMapEditor.CCEngine
         public List<TileSet> TileSets = new List<TileSet>();
         public List<LATGround> LATGrounds = new List<LATGround>();
         public TileSet RampTileSet { get; set; }
+        public TileSet BridgeTileSet { get; set; }
+        public TileSet TrainBridgeTileSet { get; set; }
 
         private const string REQUIRED_SECTION = "General";
 
@@ -131,11 +133,19 @@ namespace TSMapEditor.CCEngine
 
             int rampTileSetIndex = theaterIni.GetIntValue("General", "RampBase", -1);
             if (rampTileSetIndex < 0 || rampTileSetIndex >= TileSets.Count)
-            {
                 throw new INIConfigException("Invalid value specified for RampBase= in the theater configuration file!");
-            }
+
+            int bridgeTileSetIndex = theaterIni.GetIntValue("General", "BridgeSet", -1);
+            if (bridgeTileSetIndex < 0 || bridgeTileSetIndex >= TileSets.Count)
+                throw new INIConfigException("Invalid value specified for BridgeSet= in the theater configuration file!");
+
+            int trainBridgeTileSetIndex = theaterIni.GetIntValue("General", "TrainBridgeSet", -1);
+            if (trainBridgeTileSetIndex < 0 || trainBridgeTileSetIndex >= TileSets.Count)
+                throw new INIConfigException("Invalid value specified for TrainBridgeSet= in the theater configuration file!");
 
             RampTileSet = TileSets[rampTileSetIndex];
+            BridgeTileSet = TileSets[bridgeTileSetIndex];
+            TrainBridgeTileSet = TileSets[trainBridgeTileSetIndex];
         }
 
         public TileSet TryGetTileSetById(int id)

@@ -1,11 +1,10 @@
 ﻿using Rampastring.Tools;
-using System;
 
 namespace TSMapEditor
 {
     public static class Constants
     {
-        public const string ReleaseVersion = "1.4.11";
+        public const string ReleaseVersion = "1.4.12";
 
         public static int CellSizeX = 48;
         public static int CellSizeY = 24;

@@ -654,7 +654,15 @@ namespace TSMapEditor.Rendering
             Point2D drawPoint = CellMath.CellTopLeftPointFromCellCoords(new Point2D(tile.X, tile.Y), Map);
 
             if (tile.TileImage == null)
-                tile.TileImage = TheaterGraphics.GetTileGraphics(tile.TileIndex);
+            {
+                // Hardcode variant 0 for bridges and train bridges so they don't appear damaged
+                // Ideally we'd need to check HasDamagedData in the subcell's TmpImage, but that
+                // would be very messy... gg, Westwood.
+                if (TheaterGraphics.Theater.BridgeTileSet.ContainsTile(tile.TileIndex) || TheaterGraphics.Theater.TrainBridgeTileSet.ContainsTile(tile.TileIndex))
+                    tile.TileImage = TheaterGraphics.GetTileGraphics(tile.TileIndex, 0);
+                else
+                    tile.TileImage = TheaterGraphics.GetTileGraphics(tile.TileIndex);
+            }
 
             TileImage tileImage;
             int subTileIndex;
