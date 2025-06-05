@@ -289,7 +289,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
             float textureHeight = (regularFrame != null && regularFrame.Texture != null) ? (float)regularFrame.Texture.Height : shadowFrame.Texture.Height;
 
-            float depth = GetDepthFromPosition(gameObject, drawingBounds);
+            float depth = GetShadowDepthFromPosition(gameObject, drawingBounds);
             // depth += GetDepthAddition(gameObject);
             depth += textureHeight / Map.HeightInPixelsWithCellHeight;
 
@@ -329,6 +329,8 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             return ((cellY + (height * Constants.CellHeight)) / (float)Map.HeightInPixelsWithCellHeight) * Constants.DownwardsDepthRenderSpace +
                 (height * Constants.DepthRenderStep);
         }
+
+        protected virtual float GetShadowDepthFromPosition(T gameObject, Rectangle drawingBounds) => GetDepthFromPosition(gameObject, drawingBounds);
 
         protected MapTile GetSouthernmostCell(T gameObject)
         {
