@@ -655,13 +655,21 @@ namespace TSMapEditor.Rendering
 
             if (tile.TileImage == null)
             {
+                var theater = TheaterGraphics.Theater;
+
                 // Hardcode variant 0 for bridges and train bridges so they don't appear damaged
                 // Ideally we'd need to check HasDamagedData in the subcell's TmpImage, but that
-                // would be very messy... gg, Westwood.
-                if (TheaterGraphics.Theater.BridgeTileSet.ContainsTile(tile.TileIndex) || TheaterGraphics.Theater.TrainBridgeTileSet.ContainsTile(tile.TileIndex))
+                // would be very messy..
+                if (theater.BridgeTileSet.ContainsTile(tile.TileIndex) ||
+                    theater.TrainBridgeTileSet.ContainsTile(tile.TileIndex) ||
+                    (theater.WoodBridgeTileSet != null && theater.WoodBridgeTileSet.ContainsTile(tile.TileIndex)))
+                {
                     tile.TileImage = TheaterGraphics.GetTileGraphics(tile.TileIndex, 0);
+                }
                 else
+                {
                     tile.TileImage = TheaterGraphics.GetTileGraphics(tile.TileIndex);
+                }
             }
 
             TileImage tileImage;

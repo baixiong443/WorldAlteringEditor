@@ -79,6 +79,7 @@ namespace TSMapEditor.CCEngine
         public TileSet RampTileSet { get; set; }
         public TileSet BridgeTileSet { get; set; }
         public TileSet TrainBridgeTileSet { get; set; }
+        public TileSet WoodBridgeTileSet { get; set; }
 
         private const string REQUIRED_SECTION = "General";
 
@@ -131,21 +132,25 @@ namespace TSMapEditor.CCEngine
             InitLATGround(theaterIni, "CrystalTile", "ClearToCrystalLat", null, null, null, "Crystal");
             InitLATGround(theaterIni, "BlueMoldTile", "ClearToBlueMoldLat", null, null, null, "Blue Mold");
 
-            int rampTileSetIndex = theaterIni.GetIntValue("General", "RampBase", -1);
-            if (rampTileSetIndex < 0 || rampTileSetIndex >= TileSets.Count)
-                throw new INIConfigException("Invalid value specified for RampBase= in the theater configuration file!");
+            RampTileSet = GetTileSetFromKey(theaterIni, "RampBase", false);
+            BridgeTileSet = GetTileSetFromKey(theaterIni, "BridgeSet", false);
+            TrainBridgeTileSet = GetTileSetFromKey(theaterIni, "TrainBridgeSet", false);
+            WoodBridgeTileSet = GetTileSetFromKey(theaterIni, "WoodBridgeSet", true); // Wood bridges are optional as they do not exist in TS
+        }
 
-            int bridgeTileSetIndex = theaterIni.GetIntValue("General", "BridgeSet", -1);
-            if (bridgeTileSetIndex < 0 || bridgeTileSetIndex >= TileSets.Count)
-                throw new INIConfigException("Invalid value specified for BridgeSet= in the theater configuration file!");
+        private TileSet GetTileSetFromKey(IniFile theaterIni, string key, bool optional)
+        {
+            int index = theaterIni.GetIntValue("General", key, -1);
 
-            int trainBridgeTileSetIndex = theaterIni.GetIntValue("General", "TrainBridgeSet", -1);
-            if (trainBridgeTileSetIndex < 0 || trainBridgeTileSetIndex >= TileSets.Count)
-                throw new INIConfigException("Invalid value specified for TrainBridgeSet= in the theater configuration file!");
+            if (index < 0 || index >= TileSets.Count)
+            {
+                if (optional)
+                    return null;
 
-            RampTileSet = TileSets[rampTileSetIndex];
-            BridgeTileSet = TileSets[bridgeTileSetIndex];
-            TrainBridgeTileSet = TileSets[trainBridgeTileSetIndex];
+                throw new INIConfigException($"Invalid value specified for {key}= in the theater configuration file!");
+            }
+
+            return TileSets[index];
         }
 
         public TileSet TryGetTileSetById(int id)
