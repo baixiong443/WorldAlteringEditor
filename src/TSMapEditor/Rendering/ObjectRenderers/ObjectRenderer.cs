@@ -490,9 +490,6 @@ namespace TSMapEditor.Rendering.ObjectRenderers
         {
             Texture2D texture = frame.Texture;
 
-            if (depthAddition > 1.0f)
-                depthAddition = 1.0f;
-
             // Add extra depth so objects show above terrain despite float imprecision
             // depthAddition += Constants.DepthEpsilon;
 
@@ -507,6 +504,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                     depthAddition += ((southermostCellBottomPixelCoord - drawingBounds.Bottom) / (float)Map.HeightInPixelsWithCellHeight) * Constants.DownwardsDepthRenderSpace;
                 }
             }
+
+            if (depthAddition > 1.0f)
+                depthAddition = 1.0f;
 
             color = new Color((color.R / 255.0f) * lightingColor.X / 2f,
                 (color.B / 255.0f) * lightingColor.Y / 2f,
