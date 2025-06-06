@@ -44,8 +44,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                         throw new InvalidOperationException($"{nameof(OverlayRenderer)}.{nameof(GetExtraLight)}: Unknown lighting preview state");
                 }
 
-                const int highBridgeHeight = 4;
-                return level * highBridgeHeight;
+                return level * Constants.HighBridgeHeight;
             }
 
             return 0.0;
@@ -88,10 +87,8 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 return Constants.DepthEpsilon * ObjectDepthAdjustments.Overlay;
             }
 
-            const int bridgeHeight = 4;
-
             var tile = Map.GetTile(gameObject.Position);
-            return (Constants.DepthEpsilon * ObjectDepthAdjustments.Overlay) + ((tile.Level + bridgeHeight) * Constants.CellHeight / (float)Map.HeightInPixelsWithCellHeight);
+            return (Constants.DepthEpsilon * ObjectDepthAdjustments.Overlay) + ((tile.Level + Constants.HighBridgeHeight) * Constants.CellHeight / (float)Map.HeightInPixelsWithCellHeight);
         }
 
         protected override float GetShadowDepthFromPosition(Overlay gameObject, Rectangle drawingBounds)

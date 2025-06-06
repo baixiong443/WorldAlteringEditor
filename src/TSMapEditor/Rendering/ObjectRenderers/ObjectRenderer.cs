@@ -90,7 +90,16 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             Point2D drawPointWithoutCellHeight = CellMath.CellTopLeftPointFromCellCoords(gameObject.Position, Map);
 
             var mapCell = Map.GetTile(gameObject.Position);
-            int heightOffset = RenderDependencies.EditorState.Is2DMode ? 0 : mapCell.Level * Constants.CellHeight;
+            int heightOffset = 0;
+
+            if (!RenderDependencies.EditorState.Is2DMode)
+            {
+                heightOffset = mapCell.Level * Constants.CellHeight;
+
+                if (gameObject.IsOnBridge())
+                    heightOffset += Constants.CellHeight * Constants.HighBridgeHeight;
+            }
+
             Point2D drawPoint = new Point2D(drawPointWithoutCellHeight.X, drawPointWithoutCellHeight.Y - heightOffset);
 
             return drawPoint;

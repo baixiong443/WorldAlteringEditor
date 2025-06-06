@@ -41,7 +41,6 @@ namespace TSMapEditor.Rendering.ObjectRenderers
         {
             Point2D drawPoint = base.GetDrawPoint(gameObject);
             Point2D subCellOffset = CellMath.GetSubCellOffset(gameObject.SubCell);
-
             return drawPoint + subCellOffset;
         }
 
