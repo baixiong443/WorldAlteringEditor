@@ -32,6 +32,7 @@ namespace TSMapEditor.UI.Windows
         private EditorNumberTextBox tbNumTriggers;
         private EditorNumberTextBox tbElapsedTime;
         private EditorNumberTextBox tbDelay;
+        private XNADropDown ddTriggerType;
         private XNACheckBox cbEveryDiff;
         private EditorButton btnApply;
 
@@ -47,6 +48,7 @@ namespace TSMapEditor.UI.Windows
             tbNumTriggers = FindChild<EditorNumberTextBox>(nameof(tbNumTriggers));
             tbElapsedTime = FindChild<EditorNumberTextBox>(nameof(tbElapsedTime));
             tbDelay = FindChild<EditorNumberTextBox>(nameof(tbDelay));
+            ddTriggerType = FindChild<XNADropDown>(nameof(ddTriggerType));
             cbEveryDiff = FindChild<XNACheckBox>(nameof(cbEveryDiff));
             btnApply = FindChild<EditorButton>(nameof(btnApply));
 
@@ -71,33 +73,34 @@ namespace TSMapEditor.UI.Windows
             int elapsedTime = tbElapsedTime.Value;
             int count = tbNumTriggers.Value;
             int delay = tbDelay.Value;
+            int type = ddTriggerType.SelectedIndex;
             bool createForEveryDifficulty = cbEveryDiff.Checked;
 
             List<Trigger> baseTriggers = [];
 
             if (createForEveryDifficulty)
             {
-                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, Difficulty.Hard));
-                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, Difficulty.Medium));
-                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, Difficulty.Easy));
+                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, type, Difficulty.Hard));
+                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, type, Difficulty.Medium));
+                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, type, Difficulty.Easy));
             } 
             else
             {
-                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color));
+                baseTriggers.Add(CreateRandomTriggersSet(name, elapsedTime, count, delay, color, type));
             }
 
             Hide();
             RandomTriggerSetTriggersCreated?.Invoke(this, new RandomTriggerSetTriggersCreatedEventArgs(baseTriggers[0]));
         }
 
-        private Trigger CreateRandomTriggersSet(string name, int elapsedTime, int count, int delay, string color, Difficulty? difficulty = null)
+        private Trigger CreateRandomTriggersSet(string name, int elapsedTime, int count, int delay, string color, int type, Difficulty? difficulty = null)
         {
             if (difficulty != null)
             {
                 name = $"{difficulty.ToString()[0]} {name}";
             }
 
-            var baseTrigger = CreateBaseTrigger(name, elapsedTime, color, difficulty);
+            var baseTrigger = CreateBaseTrigger(name, elapsedTime, color, type, difficulty);
             var childTriggers = CreateChildTriggers(name, count, delay, color);
             AssociateTriggers(baseTrigger, childTriggers);
 
@@ -137,7 +140,7 @@ namespace TSMapEditor.UI.Windows
             return true;
         }
 
-        private Trigger CreateBaseTrigger(string name, int elapsedTime, string color, Difficulty? difficulty) 
+        private Trigger CreateBaseTrigger(string name, int elapsedTime, string color, int type, Difficulty? difficulty) 
         {
             string triggerName = $"{name} base";
 
@@ -179,7 +182,7 @@ namespace TSMapEditor.UI.Windows
             baseTrigger.Conditions.Add(elapsedTimeCondition);
 
             map.Triggers.Add(baseTrigger);
-            map.Tags.Add(new Tag() { ID = map.GetNewUniqueInternalId(), Name = baseTrigger.Name + " (tag)", Trigger = baseTrigger, Repeating = 2 });
+            map.Tags.Add(new Tag() { ID = map.GetNewUniqueInternalId(), Name = baseTrigger.Name + " (tag)", Trigger = baseTrigger, Repeating = type });
 
             return baseTrigger;
         }
@@ -253,6 +256,7 @@ namespace TSMapEditor.UI.Windows
             tbNumTriggers.Value = 3;
             tbElapsedTime.Value = 100;
             tbDelay.Value = 10;
+            ddTriggerType.SelectedIndex = 0;
             cbEveryDiff.Checked = false;
         }
     }
