@@ -173,6 +173,7 @@ namespace TSMapEditor.UI
 
         public override void Initialize()
         {
+            Name = nameof(MapUI);
             base.Initialize();
 
             scrollRate = UserSettings.Instance.ScrollRate;
