@@ -86,6 +86,7 @@ namespace TSMapEditor.UI.Windows
 
         public override void Kill()
         {
+            Keyboard.OnKeyDown -= Keyboard_OnKeyDown;
             WindowManager.WindowSizeChangedByUser -= WindowManager_WindowSizeChangedByUser;
             base.Kill();
         }
