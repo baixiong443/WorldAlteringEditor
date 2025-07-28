@@ -61,6 +61,7 @@ namespace TSMapEditor.UI.Windows
         private EditorContextMenu actionListContextMenu;
 
         private SelectBuildingTargetWindow selectBuildingTargetWindow;
+        private SelectAnimationWindow selectAnimationWindow;
 
         private Script editedScript;
 
@@ -157,6 +158,11 @@ namespace TSMapEditor.UI.Windows
             var buildingTargetWindowDarkeningPanel = DarkeningPanel.InitializeAndAddToParentControlWithChild(WindowManager, Parent, selectBuildingTargetWindow);
             buildingTargetWindowDarkeningPanel.Hidden += BuildingTargetWindowDarkeningPanel_Hidden;
 
+            selectAnimationWindow = new SelectAnimationWindow(WindowManager, map);
+            selectAnimationWindow.IncludeNone = false;
+            var animationWindowDarkeningPanel = DarkeningPanel.InitializeAndAddToParentControlWithChild(WindowManager, Parent, selectAnimationWindow);
+            animationWindowDarkeningPanel.Hidden += AnimationWindowDarkeningPanel_Hidden;
+
             selTypeOfAction.MouseLeftDown += SelTypeOfAction_MouseLeftDown;
 
             FindChild<EditorButton>("btnAddScript").LeftClick += BtnAddScript_LeftClick;
@@ -183,6 +189,18 @@ namespace TSMapEditor.UI.Windows
 
             lbActions.AllowRightClickUnselect = false;
             lbActions.RightClick += (s, e) => { if (editedScript != null) { lbActions.SelectedIndex = lbActions.HoveredIndex; actionListContextMenu.Open(GetCursorPoint()); } };
+        }
+
+        private void AnimationWindowDarkeningPanel_Hidden(object sender, EventArgs e)
+        {
+            if (editedScript == null || lbActions.SelectedItem == null)
+                return;
+
+            if (selectAnimationWindow.SelectedObject != null)
+            {
+                editedScript.Actions[lbActions.SelectedIndex].Argument = selectAnimationWindow.SelectedObject.Index;
+                RefreshParameterEntryText();
+            }
         }
 
         private void BuildingTargetWindowDarkeningPanel_Hidden(object sender, EventArgs e)
@@ -301,6 +319,11 @@ namespace TSMapEditor.UI.Windows
             {
                 var (index, property) = SplitBuildingWithProperty(entry.Argument);
                 selectBuildingTargetWindow.Open(index, property);
+            }
+            else if (action.ParamType == TriggerParamType.Animation)
+            {
+                var animType = entry.Argument > -1 && entry.Argument < map.Rules.AnimTypes.Count ? map.Rules.AnimTypes[entry.Argument] : null;
+                selectAnimationWindow.Open(animType);
             }
         }
 
@@ -536,6 +559,18 @@ namespace TSMapEditor.UI.Windows
                 tbParameterValue.Text = selectScriptActionPresetOptionWindow.GetSelectedItemText();
         }
 
+        private void RefreshParameterEntryText()
+        {
+            if (lbActions.SelectedItem == null || editedScript == null)
+                return;
+
+            ScriptActionEntry entry = editedScript.Actions[lbActions.SelectedIndex];
+            ScriptAction action = map.EditorConfig.ScriptActions.GetValueOrDefault(entry.Action);
+            tbParameterValue.TextChanged -= TbParameterValue_TextChanged;
+            SetParameterEntryText(entry, action);
+            tbParameterValue.TextChanged += TbParameterValue_TextChanged;
+        }
+
         private void LbActions_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (lbActions.SelectedItem == null || editedScript == null)
@@ -590,6 +625,15 @@ namespace TSMapEditor.UI.Windows
             if (action.ParamType == TriggerParamType.BuildingWithProperty)
             {
                 tbParameterValue.Text = GetBuildingWithPropertyText(scriptActionEntry.Argument);
+                return;
+            }
+            else if (action.ParamType == TriggerParamType.Animation)
+            {
+                if (scriptActionEntry.Argument > -1 && scriptActionEntry.Argument < map.Rules.AnimTypes.Count)
+                    tbParameterValue.Text = scriptActionEntry.Argument.ToString(CultureInfo.InvariantCulture) + " - " + map.Rules.AnimTypes[scriptActionEntry.Argument].ININame;
+                else
+                    tbParameterValue.Text = scriptActionEntry.Argument.ToString(CultureInfo.InvariantCulture) + " - unknown animation";
+
                 return;
             }
 
