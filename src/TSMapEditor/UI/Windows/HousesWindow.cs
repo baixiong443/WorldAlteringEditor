@@ -558,8 +558,8 @@ namespace TSMapEditor.UI.Windows
             List<House> enemyHouses = map.Houses.FindAll(house => !editedHouse.Allies.Contains(house) && !house.Allies.Contains(editedHouse));
 
             lblStatsAllianceMutualAlliance.Text = $"Mutual Alliances: {mutualAllianceHouses.Count}";
-            lblStatsAllianceOneSidedAllies.Text = $"One Sided Allies: {oneSidedAlliesHouses.Count}";
-            lblStatsAllianceOneSidedEnemies.Text = $"One Sided Enemies: {oneSidedEnemyHouses.Count}";
+            lblStatsAllianceOneSidedAllies.Text = $"One-Sided Allies: {oneSidedAlliesHouses.Count}";
+            lblStatsAllianceOneSidedEnemies.Text = $"One-Sided Enemies: {oneSidedEnemyHouses.Count}";
             lblStatsAllianceEnemies.Text = $"Enemies: {enemyHouses.Count}";
 
             mutualAllianceToolTip.Text = "Houses that are in a mutual alliance with this house:" + Environment.NewLine +
