@@ -725,7 +725,7 @@ namespace TSMapEditor.Models
             for (int i = 0; i < tile.SubTileCount; i++)
             {
                 var subTile = tile.GetSubTile(i);
-                if (subTile.TmpImage == null)
+                if (subTile == null)
                     continue;
 
                 Point2D offset = tile.GetSubTileCoordOffset(i).Value;
