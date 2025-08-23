@@ -59,7 +59,7 @@ namespace TSMapEditor.UI.Windows
         private EditHouseTypeWindow editHouseTypeWindow;
         private NewHouseWindow newHouseWindow;
         private ConfigureAlliesWindow configureAlliesWindow;
-        private SetAlliancesWindow setAlliancesWindow;
+        private CreateAllianceWindow createAllianceWindow;
 
         public override void Initialize()
         {
@@ -125,7 +125,7 @@ namespace TSMapEditor.UI.Windows
             btnEditHouseType.LeftClick += BtnEditHouseType_LeftClick;
             FindChild<EditorButton>("btnMakeHouseRepairBuildings").LeftClick += BtnMakeHouseRepairBuildings_LeftClick;
             FindChild<EditorButton>("btnMakeHouseNotRepairBuildings").LeftClick += BtnMakeHouseNotRepairBuildings_LeftClick;
-            FindChild<EditorButton>("btnSetAlliances").LeftClick += (s, e) => setAlliancesWindow.Open();
+            FindChild<EditorButton>("btnCreateAlliance").LeftClick += (s, e) => createAllianceWindow.Open();
 
             ddHouseOfHumanPlayer.SelectedIndexChanged += DdHouseOfHumanPlayer_SelectedIndexChanged;
             lbHouseList.SelectedIndexChanged += LbHouseList_SelectedIndexChanged;
@@ -142,9 +142,9 @@ namespace TSMapEditor.UI.Windows
             var configureAlliesWindowDarkeningPanel = DarkeningPanel.InitializeAndAddToParentControlWithChild(WindowManager, Parent, configureAlliesWindow);
             configureAlliesWindow.AlliesUpdated += (s, e) => RefreshHouseInfo();
 
-            setAlliancesWindow = new SetAlliancesWindow(WindowManager, map);
-            var setAlliancesWindowDarkeningPanel = DarkeningPanel.InitializeAndAddToParentControlWithChild(WindowManager, Parent, setAlliancesWindow);
-            setAlliancesWindow.AlliesUpdated += (s, e) => RefreshHouseInfo();
+            createAllianceWindow = new CreateAllianceWindow(WindowManager, map);
+            var setAlliancesWindowDarkeningPanel = DarkeningPanel.InitializeAndAddToParentControlWithChild(WindowManager, Parent, createAllianceWindow);
+            createAllianceWindow.AlliesUpdated += (s, e) => RefreshHouseInfo();
 
             if (Constants.IsRA2YR)
             {
