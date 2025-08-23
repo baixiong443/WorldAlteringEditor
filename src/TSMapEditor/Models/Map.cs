@@ -1719,6 +1719,17 @@ namespace TSMapEditor.Models
                 }
             });
 
+            // Check for multiple houses having the same ININame
+            for (int i = 0; i < Houses.Count; i++)
+            {
+                House duplicate = Houses.Find(h => h != Houses[i] && h.ININame == Houses[i].ININame);
+                if (duplicate != null)
+                {
+                    issueList.Add($"The map has multiple houses named \"{duplicate.ININame}\"! This will result in a corrupted house list in-game!");
+                    break;
+                }
+            }
+
             // Check for teamtypes having no taskforce or script
             TeamTypes.ForEach(tt =>
             {
