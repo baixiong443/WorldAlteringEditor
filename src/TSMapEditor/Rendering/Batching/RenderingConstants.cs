@@ -1,0 +1,10 @@
+﻿namespace TSMapEditor.Rendering.Batching
+{
+    class RenderingConstants
+    {
+        public const int MaxVertices = 65535;
+        public const int VerticesPerQuad = 4;
+        public const int IndexesPerQuad = 6;
+        public const int TrianglesPerQuad = 2;
+    }
+}

@@ -34,12 +34,33 @@ SamplerState PaletteSampler
     MagFilter = Point;
 };
 
+// Vertex shader input
+struct VertexShaderInput
+{
+    float3 Position : POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+matrix WorldViewProj : register(c0);
+
 struct VertexShaderOutput
 {
     float4 Position : SV_POSITION;
     float4 Color : COLOR0;
     float2 TextureCoordinates : TEXCOORD0;
 };
+
+
+VertexShaderOutput MainVS(VertexShaderInput input)
+{
+    VertexShaderOutput output;
+    output.Position = mul(float4(input.Position, 1.0), WorldViewProj);
+    output.Color = input.Color;
+    output.TextureCoordinates = input.TextureCoordinates;
+    return output;
+}
+
 
 struct PixelShaderOutput
 {
@@ -92,6 +113,7 @@ technique SpriteDrawing
 {
     pass P0
     {
+        VertexShader = compile VS_SHADERMODEL MainVS();
         PixelShader = compile PS_SHADERMODEL MainPS();
     }
 };

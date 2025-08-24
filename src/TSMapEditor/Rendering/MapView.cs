@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using TSMapEditor.GameMath;
 using TSMapEditor.Models;
 using TSMapEditor.Models.Enums;
+using TSMapEditor.Rendering.Batching;
 using TSMapEditor.Rendering.ObjectRenderers;
 using TSMapEditor.Settings;
 using TSMapEditor.UI;
@@ -115,6 +116,8 @@ namespace TSMapEditor.Rendering
         private Effect alphaMapDrawEffect;                           // Effect for rendering the alpha light map
         private Effect alphaImageToAlphaMapEffect;                   // Effect for rendering a single alpha image to the alpha light map
 
+        private TerrainBatcher terrainBatcher;
+
         private bool mapInvalidated;
         private bool cameraMoved;
         private bool minimapNeedsRefresh;
@@ -182,6 +185,7 @@ namespace TSMapEditor.Rendering
 
             RefreshRenderTargets();
             CreateDepthStencilStates();
+            InitBatchers();
 
             Map.LocalSizeChanged += (s, e) => InvalidateMap();
             Map.MapHeightChanged += (s, e) => InvalidateMap();
@@ -336,6 +340,11 @@ namespace TSMapEditor.Rendering
             }
         }
 
+        private void InitBatchers()
+        {
+            terrainBatcher = new TerrainBatcher(GraphicsDevice, palettedTerrainDrawEffect, depthRenderStencilState);
+        }
+
         private RenderDependencies CreateRenderDependencies()
         {
             return new RenderDependencies(Map, TheaterGraphics, EditorState, windowManager.GraphicsDevice, objectSpriteRecord, palettedColorDrawEffect, Camera, GetCameraRightXCoord, GetCameraBottomYCoord);
@@ -382,14 +391,17 @@ namespace TSMapEditor.Rendering
             // Draw terrain tiles in batched mode for performance if we can.
             // In Marble Madness mode we currently need to mix and match paletted and non-paletted graphics, so there's no avoiding immediate mode.
             SetTerrainEffectParams(TheaterGraphics.TheaterPalette.GetTexture());
-            var palettedTerrainDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedTerrainDrawEffect);
-            Renderer.PushSettings(palettedTerrainDrawSettings);
+
+            terrainBatcher.Begin();
             DoForVisibleCells(DrawTerrainTileAndRegisterObjects);
+            terrainBatcher.End();
 
             // We do not need to write to the depth render target when drawing smudges and flat overlays.
             // Swap to using only the main map render target.
             // At this point of drawing, depth testing is done on depth buffer embedded in the main map render target.
             Renderer.PopRenderTarget();
+
+            var palettedTerrainDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedTerrainDrawEffect);
             Renderer.PushRenderTarget(mapRenderTarget, palettedTerrainDrawSettings);
 
             // Smudges can be drawn as part of regular terrain.
@@ -703,7 +715,7 @@ namespace TSMapEditor.Rendering
 
             if (subTileIndex >= tileImage.TMPImages.Length)
             {
-                Renderer.DrawString(subTileIndex.ToString(), 0, new Vector2(drawPoint.X, drawPoint.Y), Color.Red);
+                // Renderer.DrawString(subTileIndex.ToString(), 0, new Vector2(drawPoint.X, drawPoint.Y), Color.Red);
                 return;
             }
 
@@ -711,7 +723,7 @@ namespace TSMapEditor.Rendering
 
             if (tmpImage == null || tmpImage.Texture == null)
             {
-                Renderer.DrawString(subTileIndex.ToString(), 0, new Vector2(drawPoint.X, drawPoint.Y), Color.Red);
+                // Renderer.DrawString(subTileIndex.ToString(), 0, new Vector2(drawPoint.X, drawPoint.Y), Color.Red);
                 return;
             }
 
@@ -740,8 +752,9 @@ namespace TSMapEditor.Rendering
                 }
             }
 
-            Renderer.DrawTexture(textureToDraw, new Rectangle(drawX, drawY,
-                    Constants.CellSizeX, Constants.CellSizeY), sourceRectangle, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
+            terrainBatcher.Draw(textureToDraw, 
+                new Rectangle(drawX, drawY, Constants.CellSizeX, Constants.CellSizeY),
+                sourceRectangle, color, depth);
 
             if (tmpImage.TmpImage.HasExtraData())
             {
@@ -752,12 +765,7 @@ namespace TSMapEditor.Rendering
                     tmpImage.ExtraSourceRectangle.Width,
                     tmpImage.ExtraSourceRectangle.Height);
 
-                Renderer.DrawTexture(tmpImage.Texture,
-                    exDrawRectangle,
-                    tmpImage.ExtraSourceRectangle,
-                    color,
-                    0f,
-                    Vector2.Zero, SpriteEffects.None, depth);
+                terrainBatcher.Draw(tmpImage.Texture, exDrawRectangle, tmpImage.ExtraSourceRectangle, color, depth);
             }
         }
 
