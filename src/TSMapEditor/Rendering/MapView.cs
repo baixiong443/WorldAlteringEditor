@@ -381,10 +381,8 @@ namespace TSMapEditor.Rendering
 
             // Draw terrain tiles in batched mode for performance if we can.
             // In Marble Madness mode we currently need to mix and match paletted and non-paletted graphics, so there's no avoiding immediate mode.
-            SpriteSortMode spriteSortMode = EditorState.IsMarbleMadness ? SpriteSortMode.Immediate : SpriteSortMode.Deferred;
-
             SetTerrainEffectParams(TheaterGraphics.TheaterPalette.GetTexture());
-            var palettedTerrainDrawSettings = new SpriteBatchSettings(spriteSortMode, BlendState.Opaque, null, depthRenderStencilState, null, palettedTerrainDrawEffect);
+            var palettedTerrainDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedTerrainDrawEffect);
             Renderer.PushSettings(palettedTerrainDrawSettings);
             DoForVisibleCells(DrawTerrainTileAndRegisterObjects);
 
@@ -403,7 +401,7 @@ namespace TSMapEditor.Rendering
             SetPaletteEffectParams(palettedColorDrawEffect, TheaterGraphics.TheaterPalette.GetTexture(), true, false, 1.0f, false, false);
             palettedColorDrawEffect.Parameters["IncreaseDepthUpwards"].SetValue(false);
             palettedColorDrawEffect.Parameters["DecreaseDepthUpwards"].SetValue(false);
-            var palettedColorDrawSettings = new SpriteBatchSettings(spriteSortMode, BlendState.Opaque, null, depthRenderStencilState, null, palettedColorDrawEffect);
+            var palettedColorDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedColorDrawEffect);
             Renderer.PushSettings(palettedColorDrawSettings);
             DrawFlatOverlays();
 
@@ -700,18 +698,18 @@ namespace TSMapEditor.Rendering
             if (EditorState.IsMarbleMadness)
                 tileImage = TheaterGraphics.GetMarbleMadnessTileGraphics(tileImage.TileID);
 
-            if (subTileIndex >= tileImage.TMPImages.Length)
-                return;
-
-            MGTMPImage tmpImage = tileImage.TMPImages[subTileIndex];
-
-            if (tmpImage.TmpImage == null)
-                return;
-
             int drawX = drawPoint.X;
             int drawY = drawPoint.Y;
 
             if (subTileIndex >= tileImage.TMPImages.Length)
+            {
+                Renderer.DrawString(subTileIndex.ToString(), 0, new Vector2(drawPoint.X, drawPoint.Y), Color.Red);
+                return;
+            }
+
+            MGTMPImage tmpImage = tileImage.TMPImages[subTileIndex];
+
+            if (tmpImage == null || tmpImage.Texture == null)
             {
                 Renderer.DrawString(subTileIndex.ToString(), 0, new Vector2(drawPoint.X, drawPoint.Y), Color.Red);
                 return;
@@ -725,39 +723,30 @@ namespace TSMapEditor.Rendering
             // Divide the color by 2f. This is done because unlike map lighting which can exceed 1.0 and go up to 2.0,
             // the Color instance values are capped at 1.0.
             // We lose a bit of precision from doing this, but we'll have to accept that.
-            Color color = new Color((float)tile.CellLighting.R / 2f, (float)tile.CellLighting.G / 2f, (float)tile.CellLighting.B / 2f, 0.5f);
+            // Alpha component is irrelevant as long as it's not >= 1.0f (if it is, shader uses marble madness mode code)
+            Color color = new Color((float)tile.CellLighting.R / 2f, (float)tile.CellLighting.G / 2f, (float)tile.CellLighting.B / 2f, 0.0f);
 
-            if (tmpImage.Texture != null)
+            Texture2D textureToDraw = tmpImage.Texture;
+            Rectangle sourceRectangle = tmpImage.SourceRectangle;
+
+            // Replace terrain lacking MM graphics with colored cells to denote height if we are in marble madness mode
+            if (EditorState.IsMarbleMadness && !Constants.IsFlatWorld)
             {
-                Texture2D textureToDraw = tmpImage.Texture;
-
-                // Replace terrain lacking MM graphics with colored cells to denote height if we are in marble madness mode
-                if (EditorState.IsMarbleMadness && !Constants.IsFlatWorld)
+                if (!TheaterGraphics.HasSeparateMarbleMadnessTileGraphics(tileImage.TileID))
                 {
-                    if (!TheaterGraphics.HasSeparateMarbleMadnessTileGraphics(tileImage.TileID))
-                    {
-                        textureToDraw = EditorGraphics.GenericTileWithBorderTexture;
-                        color = MarbleMadnessTileHeightLevelColors[level];
-                        color = color * 0.5f;
-                        SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, 1.0f, false, false);
-                    }
-                    else
-                    {
-                        SetPaletteEffectParams(palettedColorDrawEffect, tmpImage.GetPaletteTexture(), true, false, 1.0f, false);
-                    }
+                    textureToDraw = EditorGraphics.GenericTileWithBorderTexture;
+                    sourceRectangle = new Rectangle(0, 0, textureToDraw.Width, textureToDraw.Height);
+                    color = MarbleMadnessTileHeightLevelColors[level];
                 }
-
-                Renderer.DrawTexture(textureToDraw, new Rectangle(drawX, drawY,
-                    Constants.CellSizeX, Constants.CellSizeY), tmpImage.SourceRectangle, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
             }
 
-            if (tmpImage.Texture != null && !EditorState.Is2DMode)
+            Renderer.DrawTexture(textureToDraw, new Rectangle(drawX, drawY,
+                    Constants.CellSizeX, Constants.CellSizeY), sourceRectangle, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
+
+            if (tmpImage.TmpImage.HasExtraData())
             {
                 drawX = drawX + tmpImage.TmpImage.XExtra - tmpImage.TmpImage.X;
                 drawY = drawY + tmpImage.TmpImage.YExtra - tmpImage.TmpImage.Y;
-
-                if (EditorState.IsMarbleMadness)
-                    SetPaletteEffectParams(palettedColorDrawEffect, tmpImage.GetPaletteTexture(), true, false, 1.0f);
 
                 var exDrawRectangle = new Rectangle(drawX, drawY,
                     tmpImage.ExtraSourceRectangle.Width,

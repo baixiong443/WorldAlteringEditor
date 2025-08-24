@@ -65,17 +65,25 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
     output.depthTarget = totalDepth;
     output.depthEmbedded = totalDepth;
 
-    // Get color from palette
-    float4 paletteColor = PaletteTexture.Sample(PaletteSampler, float2(tex.a, 0.5));
+    // Abuse alpha component of color to determine whether we should render with a palette or not
+    if (input.Color.a >= 1.0f)
+    {
+        output.color = float4(tex.r * input.Color.r, tex.g * input.Color.g, tex.b * input.Color.b, 1.0f);
+    }
+    else
+    {
+        // Get color from palette
+        float4 paletteColor = PaletteTexture.Sample(PaletteSampler, float2(tex.a, 0.5));
 
-    // Multiply the color by 2. This is done because unlike map lighting which can exceed 1.0 and go up to 2.0,
-    // the color values passed in the pixel shader input are capped at 1.0.
-    // So the multiplication is done to translate pixel shader input color space into in-game color space.
-    // We lose a bit of precision from doing this, but we'll have to accept that.
-    output.color = float4(paletteColor.r * input.Color.r * 2.0,
+        // Multiply the color by 2. This is done because unlike map lighting which can exceed 1.0 and go up to 2.0,
+        // the color values passed in the pixel shader input are capped at 1.0.
+        // So the multiplication is done to translate pixel shader input color space into in-game color space.
+        // We lose a bit of precision from doing this, but we'll have to accept that.
+        output.color = float4(paletteColor.r * input.Color.r * 2.0,
                     paletteColor.g * input.Color.g * 2.0,
                     paletteColor.b * input.Color.b * 2.0,
                     paletteColor.a);
+    }
 
     return output;
 }
