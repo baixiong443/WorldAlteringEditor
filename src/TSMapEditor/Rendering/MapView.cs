@@ -109,6 +109,7 @@ namespace TSMapEditor.Rendering
         private RenderTarget2D alphaRenderTarget;                    // Render target for alpha map
         private RenderTarget2D minimapRenderTarget;                  // For minimap and megamap rendering
 
+        private Effect palettedTerrainDrawEffect;                    // Effect for rendering terrain
         private Effect palettedColorDrawEffect;                      // Effect for rendering textures, both paletted and RGBA, with or without remap, with depth assignation to a separate render target
         private Effect combineDrawEffect;                            // Effect for combining map and object render targets into one, taking both of their depth buffers into account
         private Effect alphaMapDrawEffect;                           // Effect for rendering the alpha light map
@@ -220,6 +221,7 @@ namespace TSMapEditor.Rendering
 
         private void LoadShaders()
         {
+            palettedTerrainDrawEffect = AssetLoader.LoadEffect("Shaders/PalettedTerrainDraw");
             palettedColorDrawEffect = AssetLoader.LoadEffect("Shaders/PalettedColorDraw");
             combineDrawEffect = AssetLoader.LoadEffect("Shaders/CombineWithDepth");
             alphaMapDrawEffect = AssetLoader.LoadEffect("Shaders/AlphaMapApply");
@@ -381,27 +383,28 @@ namespace TSMapEditor.Rendering
             // In Marble Madness mode we currently need to mix and match paletted and non-paletted graphics, so there's no avoiding immediate mode.
             SpriteSortMode spriteSortMode = EditorState.IsMarbleMadness ? SpriteSortMode.Immediate : SpriteSortMode.Deferred;
 
-            SetPaletteEffectParams(palettedColorDrawEffect, TheaterGraphics.TheaterPalette.GetTexture(), true, false, 1.0f);
-            palettedColorDrawEffect.Parameters["ComplexDepth"].SetValue(false);
-            palettedColorDrawEffect.Parameters["IncreaseDepthUpwards"].SetValue(false);
-            palettedColorDrawEffect.Parameters["DecreaseDepthUpwards"].SetValue(false);
-            var palettedColorDrawSettings = new SpriteBatchSettings(spriteSortMode, BlendState.Opaque, null, depthRenderStencilState, null, palettedColorDrawEffect);
-            Renderer.PushSettings(palettedColorDrawSettings);
+            SetTerrainEffectParams(TheaterGraphics.TheaterPalette.GetTexture());
+            var palettedTerrainDrawSettings = new SpriteBatchSettings(spriteSortMode, BlendState.Opaque, null, depthRenderStencilState, null, palettedTerrainDrawEffect);
+            Renderer.PushSettings(palettedTerrainDrawSettings);
             DoForVisibleCells(DrawTerrainTileAndRegisterObjects);
-            Renderer.PopSettings();
 
             // We do not need to write to the depth render target when drawing smudges and flat overlays.
             // Swap to using only the main map render target.
             // At this point of drawing, depth testing is done on depth buffer embedded in the main map render target.
             Renderer.PopRenderTarget();
-            Renderer.PushRenderTarget(mapRenderTarget);
+            Renderer.PushRenderTarget(mapRenderTarget, palettedTerrainDrawSettings);
 
             // Smudges can be drawn as part of regular terrain.
+            // Afterwards, we need to switch to the more complex shader, so we pop rendering settings.
             DrawSmudges();
+            Renderer.PopSettings();
 
-            // Same goes for flat overlays.
-            SetPaletteEffectParams(palettedColorDrawEffect, TheaterGraphics.TheaterPalette.GetTexture(), true, false, 1.0f);
+            // Flat overlays can also be drawn as part of regular terrain, but they need to use the more complex shader.
+            SetPaletteEffectParams(palettedColorDrawEffect, TheaterGraphics.TheaterPalette.GetTexture(), true, false, 1.0f, false, false);
+            palettedColorDrawEffect.Parameters["IncreaseDepthUpwards"].SetValue(false);
             palettedColorDrawEffect.Parameters["DecreaseDepthUpwards"].SetValue(false);
+            var palettedColorDrawSettings = new SpriteBatchSettings(spriteSortMode, BlendState.Opaque, null, depthRenderStencilState, null, palettedColorDrawEffect);
+            Renderer.PushSettings(palettedColorDrawSettings);
             DrawFlatOverlays();
 
             Renderer.PopRenderTarget();
@@ -470,6 +473,11 @@ namespace TSMapEditor.Rendering
             effect.Parameters["UseRemap"].SetValue(useRemap);
             effect.Parameters["Opacity"].SetValue(opacity);
             effect.Parameters["ComplexDepth"].SetValue(complexDepth);
+        }
+
+        private void SetTerrainEffectParams(Texture2D paletteTexture)
+        {
+            palettedTerrainDrawEffect.Parameters["PaletteTexture"].SetValue(paletteTexture);
         }
 
         private void DoForVisibleCells(Action<MapTile> action)
@@ -820,15 +828,11 @@ namespace TSMapEditor.Rendering
         {
             smudgesToRender.Sort(CompareGameObjectsForRendering);
 
-            var colorDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedColorDrawEffect);
-            SetPaletteEffectParams(palettedColorDrawEffect, TheaterGraphics.TheaterPalette.GetTexture(), true, false, 1.0f);
-            Renderer.PushSettings(colorDrawSettings);
             for (int i = 0; i < smudgesToRender.Count; i++)
             {
                 smudgeRenderer.DrawNonRemap(smudgesToRender[i], smudgeRenderer.GetDrawPoint(smudgesToRender[i]));
             }
             smudgesToRender.ForEach(DrawObject);
-            Renderer.PopSettings();
         }
 
         private void DrawFlatOverlays()
