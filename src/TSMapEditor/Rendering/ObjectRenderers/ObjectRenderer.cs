@@ -267,7 +267,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             }
 
             return new Rectangle(finalDrawPointX, finalDrawPointY,
-                frame?.Texture.Width ?? 1, frame?.Texture.Height ?? 1);
+                frame?.SourceRectangle.Width ?? 1, frame?.SourceRectangle.Height ?? 1);
         }
 
         public virtual void DrawShadow(T gameObject)
@@ -296,13 +296,13 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
             Rectangle drawingBounds = GetTextureDrawCoords(gameObject, shadowFrame, drawPoint);
 
-            float textureHeight = (regularFrame != null && regularFrame.Texture != null) ? (float)regularFrame.Texture.Height : shadowFrame.Texture.Height;
+            float textureHeight = (regularFrame != null && regularFrame.Texture != null) ? (float)regularFrame.SourceRectangle.Height : shadowFrame.SourceRectangle.Height;
 
             float depth = GetShadowDepthFromPosition(gameObject, drawingBounds);
             // depth += GetDepthAddition(gameObject);
             depth += textureHeight / Map.HeightInPixelsWithCellHeight;
 
-            RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(null, texture, drawingBounds, new Color(255, 255, 255, 128), false, true, depth));
+            RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(null, shadowFrame, drawingBounds, new Color(255, 255, 255, 128), false, true, depth));
         }
 
         protected virtual float GetDepthFromPosition(T gameObject, Rectangle drawingBounds)
@@ -497,8 +497,6 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             Rectangle drawingBounds, Texture2D paletteTexture, Vector4 lightingColor, float depthAddition, float textureWidthCenterPoint,
             bool compensateForBottomGap)
         {
-            Texture2D texture = frame.Texture;
-
             // Add extra depth so objects show above terrain despite float imprecision
             // depthAddition += Constants.DepthEpsilon;
 
@@ -521,7 +519,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 (color.B / 255.0f) * lightingColor.Y / 2f,
                 (color.B / 255.0f) * lightingColor.Z / 2f, textureWidthCenterPoint);
 
-            RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(paletteTexture, texture, drawingBounds, color, false, false, depthAddition));
+            RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(paletteTexture, frame, drawingBounds, color, false, false, depthAddition));
 
             if (drawRemap && remapFrame != null)
             {
@@ -531,7 +529,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                     (remapColor.B / 255.0f),
                     textureWidthCenterPoint);
 
-                RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(paletteTexture, remapFrame.Texture, drawingBounds, remapColor, true, false, depthAddition));
+                RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(paletteTexture, remapFrame, drawingBounds, remapColor, true, false, depthAddition));
             }
         }
 

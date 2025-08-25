@@ -120,7 +120,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 {
                     Rectangle drawingBounds = GetTextureDrawCoords(gameObject, frame, drawPoint);
 
-                    RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(null, frame.Texture, drawingBounds, Color.White, false, true, GetDepthAddition(gameObject)));
+                    RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(null, frame, drawingBounds, Color.White, false, true, GetDepthAddition(gameObject)));
                 }
             }
         }

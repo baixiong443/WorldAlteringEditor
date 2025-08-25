@@ -3,17 +3,31 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace TSMapEditor.Rendering.Batching
 {
-    /// <summary>
-    /// Custom SpriteBatch replacement for more efficient rendering of terrain tiles.
-    /// </summary>
-    public sealed class TerrainBatcher : AbstractBatcher<VertexPositionColorTexture>
+    public struct VertexForObject : IVertexType
     {
-        public TerrainBatcher(GraphicsDevice graphicsDevice, Effect effect, DepthStencilState depthStencilState) : base(graphicsDevice, effect)
+        public Vector3 Position;
+        public Color Color;
+        public Vector2 TextureCoordinate;
+        public Vector4 CustomData;
+
+        public readonly static VertexDeclaration VertexDeclaration = new VertexDeclaration
+        (
+            new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+            new VertexElement(12, VertexElementFormat.Color, VertexElementUsage.Color, 0),
+            new VertexElement(16, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+            new VertexElement(24, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 1)
+        );
+
+        readonly VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
+    }
+
+    public sealed class GameObjectBatcher : AbstractBatcher<VertexForObject>
+    {
+        public GameObjectBatcher(GraphicsDevice graphicsDevice, Effect effect) : base(graphicsDevice, effect)
         {
-            this.depthStencilState = depthStencilState;
         }
 
-        public void Draw(Texture2D texture, Rectangle destinationRect, Rectangle? sourceRect, Color color, float depth)
+        public void Draw(Texture2D texture, Rectangle destinationRect, Rectangle? sourceRect, Color color, float depth, Vector4 customData)
         {
             Rectangle src = sourceRect ?? new Rectangle(0, 0, texture.Width, texture.Height);
 
@@ -27,7 +41,7 @@ namespace TSMapEditor.Rendering.Batching
             float w = destinationRect.Width;
             float h = destinationRect.Height;
 
-            TextureBatch<VertexPositionColorTexture> batch = null;
+            TextureBatch<VertexForObject> batch = null;
             for (int i = 0; i < queuedBatches.Count; i++)
             {
                 if (queuedBatches[i].Texture == texture && !queuedBatches[i].IsFull())
@@ -38,7 +52,7 @@ namespace TSMapEditor.Rendering.Batching
             {
                 if (!inactiveBatches.TryDequeue(out batch))
                 {
-                    batch = new TextureBatch<VertexPositionColorTexture>();
+                    batch = new TextureBatch<VertexForObject>();
                 }
 
                 queuedBatches.Add(batch);
@@ -57,12 +71,12 @@ namespace TSMapEditor.Rendering.Batching
             unsafe
             {
                 // 4 vertices of the quad
-                fixed (VertexPositionColorTexture* p = &batch.Vertices[vertexOffset])
+                fixed (VertexForObject* p = &batch.Vertices[vertexOffset])
                 {
-                    p[0] = new VertexPositionColorTexture { Position = new Vector3(x, y, depth), TextureCoordinate = new Vector2(u1, v1), Color = color };
-                    p[1] = new VertexPositionColorTexture { Position = new Vector3(x + w, y, depth), TextureCoordinate = new Vector2(u2, v1), Color = color };
-                    p[2] = new VertexPositionColorTexture { Position = new Vector3(x, y + h, depth), TextureCoordinate = new Vector2(u1, v2), Color = color };
-                    p[3] = new VertexPositionColorTexture { Position = new Vector3(x + w, y + h, depth), TextureCoordinate = new Vector2(u2, v2), Color = color };
+                    p[0] = new VertexForObject { Position = new Vector3(x, y, depth), TextureCoordinate = new Vector2(u1, v1), Color = color, CustomData = customData };
+                    p[1] = new VertexForObject { Position = new Vector3(x + w, y, depth), TextureCoordinate = new Vector2(u2, v1), Color = color, CustomData = customData };
+                    p[2] = new VertexForObject { Position = new Vector3(x, y + h, depth), TextureCoordinate = new Vector2(u1, v2), Color = color, CustomData = customData };
+                    p[3] = new VertexForObject { Position = new Vector3(x + w, y + h, depth), TextureCoordinate = new Vector2(u2, v2), Color = color, CustomData = customData };
                 }
 
                 // 2 triangles (indices)

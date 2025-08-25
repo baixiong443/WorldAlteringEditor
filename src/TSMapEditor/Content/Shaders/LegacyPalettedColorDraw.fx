@@ -9,13 +9,13 @@
 #define PS_SHADERMODEL ps_4_0
 #endif
 
-// Flexible shader for rendering objects.
-// Can render objects in either paletted or RGBA mode,
-// takes depth into account, and can also draw shadows.
+// Legacy version of the PalettedColorDraw shader used for drawing objects.
+// PalettedColorDraw relies on a custom vertex shader with custom data that
+// makes it incompatible with MonoGame's regular SpriteBatch.
 
-// Relies on custom data in the vertex shader,
-// meaning it is not compatible with SpriteBatch
-// and needs a custom batcher instead.
+// This shader does not include a custom vertex shader, keeping it compatible
+// with MonoGame's SpriteBatch. It is used for drawing lines, text, and
+// other more complicated elements that we do not have custom batching code for.
 
 float WorldTextureHeight;
 bool ComplexDepth;
@@ -48,22 +48,11 @@ SamplerState PaletteSampler
     MagFilter = Point;
 };
 
-struct VertexShaderInput
-{
-    float3 Position : POSITION;
-    float4 Color : COLOR0;
-    float2 TextureCoordinates : TEXCOORD0;
-    float4 CustomData : TEXCOORD1;
-};
-
-matrix WorldViewProj : register(c0);
-
 struct VertexShaderOutput
 {
     float4 Position : SV_POSITION;
     float4 Color : COLOR0;
     float2 TextureCoordinates : TEXCOORD0;
-    float4 CustomData : TEXCOORD1;
 };
 
 struct PixelShaderOutput
@@ -72,17 +61,6 @@ struct PixelShaderOutput
     float depthTarget : SV_Target1;
     float depthEmbedded : SV_Depth;
 };
-
-
-VertexShaderOutput MainVS(VertexShaderInput input)
-{
-    VertexShaderOutput output;
-    output.Position = mul(float4(input.Position, 1.0), WorldViewProj);
-    output.Color = input.Color;
-    output.TextureCoordinates = input.TextureCoordinates;
-    output.CustomData = input.CustomData;
-    return output;
-}
 
 
 PixelShaderOutput MainPS(VertexShaderOutput input)
@@ -109,23 +87,22 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
     {
         if (ComplexDepth || IncreaseDepthUpwards || DecreaseDepthUpwards)
         {
-            float imageHeight = input.CustomData.y;
-
-            uint spriteSheetWidth;
-            uint spriteSheetHeight;
-            MainTexture.GetDimensions(spriteSheetWidth, spriteSheetHeight);
+            // This branch and its sub-branches do not support sprite sheets!
+            // Only used for drawing objects - terrain uses sprite sheets to increase performance,
+            // but terrain but does not need complex depth.
+            uint width;
+            uint height;
+            MainTexture.GetDimensions(width, height);
 
             float depthMultiplier = 0.9;
 
-            float distanceFromTop = (input.TextureCoordinates.y - input.CustomData.w) * spriteSheetHeight;
-            float distanceFromBottom = imageHeight - distanceFromTop;
+            float distanceFromTop = input.TextureCoordinates.y * height;
+            float distanceFromBottom = height - distanceFromTop;
 
             if (ComplexDepth)
             {
-                float imageWidth = input.CustomData.x;
-
-                float centralX = imageWidth * input.Color.a;
-                float dx = abs((spriteSheetWidth * (input.TextureCoordinates.x - input.CustomData.z)) - centralX);
+                float centralX = width * input.Color.a;
+                float dx = abs((width * input.TextureCoordinates.x) - centralX);
                 totalDepth = input.Position.z + (((distanceFromBottom - dx) / WorldTextureHeight) * depthMultiplier);
             }
             else if (IncreaseDepthUpwards)
@@ -183,7 +160,6 @@ technique SpriteDrawing
 {
     pass P0
     {
-        VertexShader = compile VS_SHADERMODEL MainVS();
         PixelShader = compile PS_SHADERMODEL MainPS();
     }
 };

@@ -3,7 +3,7 @@ using System;
 
 namespace TSMapEditor.Rendering.Batching
 {
-    class TextureBatch<T> where T : struct, IVertexType
+    public class TextureBatch<T> where T : struct, IVertexType
     {
         public Texture2D Texture;
         public T[] Vertices = new T[16];
