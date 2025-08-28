@@ -307,9 +307,6 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                             nonRemapColor, true, gameObject.GetRemapColor(), affectedByLighting, affectedByAmbient,
                             drawPoint, depthAddition);
                     }
-
-                    //buildingAnimRenderer.BuildingAnimDepthAddition = depthAddition - Constants.DepthEpsilon;
-                    //buildingAnimRenderer.Draw(anim, false);
                 }
             }
 
@@ -419,6 +416,16 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             depthRectangleRight += depthAddition;
             depthRectangleRight += GetDepthAddition(gameObject);
 
+            // Check for truncation due to integer-based source rectangle math
+            // For example, a texture width of 91 pixels will give us two 45-pixel wide rectangles,
+            // or an even-width texture like 104 might give us one uneven rectangle due to truncating
+            // in source rectangle computation
+            if (sourceRectangleLeft.Width + sourceRectangleRight.Width != drawingBounds.Width)
+            {
+                sourceRectangleRight.X = sourceRectangleRight.X - 1;
+                sourceRectangleRight.Width = sourceRectangleRight.Width + 1;
+            }
+
             color = new Color((color.R / 255.0f) * lighting.X / 2f,
                 (color.B / 255.0f) * lighting.Y / 2f,
                 (color.B / 255.0f) * lighting.Z / 2f, color.A);
@@ -431,17 +438,11 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
             if (drawRemap && remapFrame != null)
             {
-                remapColor = new Color(
-                    (remapColor.R / 255.0f),
-                    (remapColor.G / 255.0f),
-                    (remapColor.B / 255.0f),
-                    color.A);
+                Rectangle remapSourceRectangleLeft = sourceRectangleLeft with { X = remapFrame.SourceRectangle.X, Y = remapFrame.SourceRectangle.Y };
+                Rectangle remapSourceRectangleRight = sourceRectangleRight with { X = remapFrame.SourceRectangle.X + sourceRectangleLeft.Width, Y = remapFrame.SourceRectangle.Y };
 
-                sourceRectangleLeft = new Rectangle(remapFrame.SourceRectangle.X, remapFrame.SourceRectangle.Y, sourceRectangleLeft.Width, remapFrame.SourceRectangle.Height);
-                sourceRectangleRight = new Rectangle(remapFrame.SourceRectangle.X + sourceRectangleLeft.Width, remapFrame.SourceRectangle.Y, sourceRectangleRight.Width, remapFrame.SourceRectangle.Height);
-
-                RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(image.GetPaletteTexture(), remapFrame.Texture, sourceRectangleLeft, drawingBoundsLeft, remapColor, true, false, depthRectangleLeft + Constants.DepthEpsilon));
-                RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(image.GetPaletteTexture(), remapFrame.Texture, sourceRectangleRight, drawingBoundsRight, remapColor, true, false, depthRectangleRight + Constants.DepthEpsilon));
+                RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(image.GetPaletteTexture(), remapFrame.Texture, remapSourceRectangleLeft, drawingBoundsLeft, remapColor, true, false, depthRectangleLeft + Constants.DepthEpsilon));
+                RenderDependencies.ObjectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(image.GetPaletteTexture(), remapFrame.Texture, remapSourceRectangleRight, drawingBoundsRight, remapColor, true, false, depthRectangleRight + Constants.DepthEpsilon));
             }
         }
 
