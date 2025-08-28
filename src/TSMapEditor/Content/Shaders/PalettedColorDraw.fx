@@ -9,22 +9,13 @@
 #define PS_SHADERMODEL ps_4_0
 #endif
 
-// Flexible shader for rendering objects.
+// Shader for rendering objects.
 // Can render objects in either paletted or RGBA mode,
-// takes depth into account, and can also draw shadows.
+// and can also draw shadows.
 
-// Relies on custom data in the vertex shader,
-// meaning it is not compatible with SpriteBatch
-// and needs a custom batcher instead.
-
-float WorldTextureHeight;
-bool ComplexDepth;
-bool IncreaseDepthUpwards;
-bool DecreaseDepthUpwards;
 bool IsShadow;
 bool UsePalette;
 bool UseRemap;
-float Opacity;
 
 Texture2D MainTexture;
 SamplerState MainSampler
@@ -53,7 +44,6 @@ struct VertexShaderInput
     float3 Position : POSITION;
     float4 Color : COLOR0;
     float2 TextureCoordinates : TEXCOORD0;
-    float4 CustomData : TEXCOORD1;
 };
 
 matrix WorldViewProj : register(c0);
@@ -63,14 +53,11 @@ struct VertexShaderOutput
     float4 Position : SV_POSITION;
     float4 Color : COLOR0;
     float2 TextureCoordinates : TEXCOORD0;
-    float4 CustomData : TEXCOORD1;
 };
 
 struct PixelShaderOutput
 {
     float4 color : SV_Target0;
-    float depthTarget : SV_Target1;
-    float depthEmbedded : SV_Depth;
 };
 
 
@@ -80,7 +67,6 @@ VertexShaderOutput MainVS(VertexShaderInput input)
     output.Position = mul(float4(input.Position, 1.0), WorldViewProj);
     output.Color = input.Color;
     output.TextureCoordinates = input.TextureCoordinates;
-    output.CustomData = input.CustomData;
     return output;
 }
 
@@ -96,51 +82,12 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
     // Discard transparent areas
     clip(tex.a == 0.0f ? -1 : 1);
 
-    float totalDepth = input.Position.z;
-
     if (IsShadow)
     {
         output.color = float4(0, 0, 0, 0.5);
-
-        output.depthTarget = totalDepth;
-        output.depthEmbedded = totalDepth;
     }
     else
     {
-        if (ComplexDepth || IncreaseDepthUpwards || DecreaseDepthUpwards)
-        {
-            float imageHeight = input.CustomData.y;
-
-            uint spriteSheetWidth;
-            uint spriteSheetHeight;
-            MainTexture.GetDimensions(spriteSheetWidth, spriteSheetHeight);
-
-            float depthMultiplier = 0.9;
-
-            float distanceFromTop = (input.TextureCoordinates.y - input.CustomData.w) * spriteSheetHeight;
-            float distanceFromBottom = imageHeight - distanceFromTop;
-
-            if (ComplexDepth)
-            {
-                float imageWidth = input.CustomData.x;
-
-                float centralX = imageWidth * input.Color.a;
-                float dx = abs((spriteSheetWidth * (input.TextureCoordinates.x - input.CustomData.z)) - centralX);
-                totalDepth = input.Position.z + (((distanceFromBottom - dx) / WorldTextureHeight) * depthMultiplier);
-            }
-            else if (IncreaseDepthUpwards)
-            {
-                totalDepth = input.Position.z + ((distanceFromBottom / WorldTextureHeight) * depthMultiplier);
-            }
-            else if (DecreaseDepthUpwards)
-            {
-                totalDepth = input.Position.z - ((distanceFromBottom / WorldTextureHeight) * depthMultiplier);
-            }
-        }
-
-        output.depthTarget = totalDepth;
-        output.depthEmbedded = totalDepth;
-
         if (UsePalette)
         {
             // Get color from palette
@@ -154,7 +101,7 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
                 // Brigthen it up a bit
                 brightness = brightness * 1.25;
 
-                output.color = float4(brightness * input.Color.r, brightness * input.Color.g, brightness * input.Color.b, paletteColor.a) * Opacity;
+                output.color = float4(brightness * input.Color.r, brightness * input.Color.g, brightness * input.Color.b, paletteColor.a) * input.Color.a;
             }
             else
             {
@@ -165,14 +112,14 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
                 output.color = float4(paletteColor.r * input.Color.r * 2.0,
                     paletteColor.g * input.Color.g * 2.0,
                     paletteColor.b * input.Color.b * 2.0,
-                    paletteColor.a) * Opacity;
+                    paletteColor.a) * input.Color.a;
             }
         }
         else
         {
             output.color = float4(tex.r * input.Color.r * 2.0,
                 tex.g * input.Color.g * 2.0,
-                tex.b * input.Color.b * 2.0, tex.a) * Opacity;
+                tex.b * input.Color.b * 2.0, tex.a) * input.Color.a;
         }
     }
 

@@ -25,41 +25,11 @@
 /processorParam:DebugMode=Auto
 /build:Shaders/AlphaMapApply.fx
 
-#begin Shaders/ColorDraw.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/ColorDraw.fx
-
-#begin Shaders/CombineWithDepth.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/CombineWithDepth.fx
-
-#begin Shaders/DepthApply.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/DepthApply.fx
-
-#begin Shaders/LegacyPalettedColorDraw.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/LegacyPalettedColorDraw.fx
-
 #begin Shaders/PalettedColorDraw.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Shaders/PalettedColorDraw.fx
-
-#begin Shaders/PalettedDrawNoDepth.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/PalettedDrawNoDepth.fx
 
 #begin Shaders/PalettedTerrainDraw.fx
 /importer:EffectImporter

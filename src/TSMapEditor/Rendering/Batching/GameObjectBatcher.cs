@@ -27,7 +27,7 @@ namespace TSMapEditor.Rendering.Batching
         {
         }
 
-        public void Draw(Texture2D texture, Rectangle destinationRect, Rectangle? sourceRect, Color color, float depth, Vector4 customData)
+        public void Draw(Texture2D texture, Rectangle destinationRect, Rectangle? sourceRect, Color color, DepthRectangle depthRectangle)
         {
             Rectangle src = sourceRect ?? new Rectangle(0, 0, texture.Width, texture.Height);
 
@@ -73,10 +73,10 @@ namespace TSMapEditor.Rendering.Batching
                 // 4 vertices of the quad
                 fixed (VertexForObject* p = &batch.Vertices[vertexOffset])
                 {
-                    p[0] = new VertexForObject { Position = new Vector3(x, y, depth), TextureCoordinate = new Vector2(u1, v1), Color = color, CustomData = customData };
-                    p[1] = new VertexForObject { Position = new Vector3(x + w, y, depth), TextureCoordinate = new Vector2(u2, v1), Color = color, CustomData = customData };
-                    p[2] = new VertexForObject { Position = new Vector3(x, y + h, depth), TextureCoordinate = new Vector2(u1, v2), Color = color, CustomData = customData };
-                    p[3] = new VertexForObject { Position = new Vector3(x + w, y + h, depth), TextureCoordinate = new Vector2(u2, v2), Color = color, CustomData = customData };
+                    p[0] = new VertexForObject { Position = new Vector3(x, y, depthRectangle.TopLeft), TextureCoordinate = new Vector2(u1, v1), Color = color };
+                    p[1] = new VertexForObject { Position = new Vector3(x + w, y, depthRectangle.TopRight), TextureCoordinate = new Vector2(u2, v1), Color = color };
+                    p[2] = new VertexForObject { Position = new Vector3(x, y + h, depthRectangle.BottomLeft), TextureCoordinate = new Vector2(u1, v2), Color = color };
+                    p[3] = new VertexForObject { Position = new Vector3(x + w, y + h, depthRectangle.BottomRight), TextureCoordinate = new Vector2(u2, v2), Color = color };
                 }
 
                 // 2 triangles (indices)

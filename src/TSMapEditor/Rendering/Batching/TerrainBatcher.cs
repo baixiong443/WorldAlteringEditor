@@ -13,7 +13,7 @@ namespace TSMapEditor.Rendering.Batching
             this.depthStencilState = depthStencilState;
         }
 
-        public void Draw(Texture2D texture, Rectangle destinationRect, Rectangle? sourceRect, Color color, float depth)
+        public void Draw(Texture2D texture, Rectangle destinationRect, Rectangle? sourceRect, Color color, float depthTop, float depthBottom)
         {
             Rectangle src = sourceRect ?? new Rectangle(0, 0, texture.Width, texture.Height);
 
@@ -59,10 +59,10 @@ namespace TSMapEditor.Rendering.Batching
                 // 4 vertices of the quad
                 fixed (VertexPositionColorTexture* p = &batch.Vertices[vertexOffset])
                 {
-                    p[0] = new VertexPositionColorTexture { Position = new Vector3(x, y, depth), TextureCoordinate = new Vector2(u1, v1), Color = color };
-                    p[1] = new VertexPositionColorTexture { Position = new Vector3(x + w, y, depth), TextureCoordinate = new Vector2(u2, v1), Color = color };
-                    p[2] = new VertexPositionColorTexture { Position = new Vector3(x, y + h, depth), TextureCoordinate = new Vector2(u1, v2), Color = color };
-                    p[3] = new VertexPositionColorTexture { Position = new Vector3(x + w, y + h, depth), TextureCoordinate = new Vector2(u2, v2), Color = color };
+                    p[0] = new VertexPositionColorTexture { Position = new Vector3(x, y, depthTop), TextureCoordinate = new Vector2(u1, v1), Color = color };
+                    p[1] = new VertexPositionColorTexture { Position = new Vector3(x + w, y, depthTop), TextureCoordinate = new Vector2(u2, v1), Color = color };
+                    p[2] = new VertexPositionColorTexture { Position = new Vector3(x, y + h, depthBottom), TextureCoordinate = new Vector2(u1, v2), Color = color };
+                    p[3] = new VertexPositionColorTexture { Position = new Vector3(x + w, y + h, depthBottom), TextureCoordinate = new Vector2(u2, v2), Color = color };
                 }
 
                 // 2 triangles (indices)

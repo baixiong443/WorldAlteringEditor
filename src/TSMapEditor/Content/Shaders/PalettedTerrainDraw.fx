@@ -65,8 +65,6 @@ VertexShaderOutput MainVS(VertexShaderInput input)
 struct PixelShaderOutput
 {
     float4 color : SV_Target0;
-    float depthTarget : SV_Target1;
-    float depthEmbedded : SV_Depth;
 };
 
 
@@ -80,11 +78,6 @@ PixelShaderOutput MainPS(VertexShaderOutput input)
 
     // Discard transparent areas
     clip(tex.a == 0.0f ? -1 : 1);
-
-    float totalDepth = input.Position.z;
-
-    output.depthTarget = totalDepth;
-    output.depthEmbedded = totalDepth;
 
     // Abuse alpha component of color to determine whether we should render with a palette or not
     if (input.Color.a >= 1.0f)
