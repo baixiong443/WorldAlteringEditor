@@ -36,6 +36,20 @@ namespace TSMapEditor.Rendering
     /// </summary>
     public class MapView : IMapView
     {
+        struct WaypointDrawStruct
+        {
+            public Waypoint Waypoint;
+            public Color Color;
+            public Rectangle DrawRectangle;
+
+            public WaypointDrawStruct(Waypoint waypoint, Color color, Rectangle drawRectangle)
+            {
+                Waypoint = waypoint;
+                Color = color;
+                DrawRectangle = drawRectangle;
+            }
+        }
+
         private static Color[] MarbleMadnessTileHeightLevelColors = new Color[]
         {
             new Color(165, 28, 68),
@@ -125,6 +139,8 @@ namespace TSMapEditor.Rendering
         private List<Smudge> smudgesToRender = new List<Smudge>();
         private List<AlphaImageRenderStruct> alphaImagesToRender = new List<AlphaImageRenderStruct>();
         private ObjectSpriteRecord objectSpriteRecord = new ObjectSpriteRecord();
+
+        private List<WaypointDrawStruct> waypointsToRender = new List<WaypointDrawStruct>();
 
         private Stopwatch refreshStopwatch;
 
@@ -756,9 +772,105 @@ namespace TSMapEditor.Rendering
             }
         }
 
+        /// <summary>
+        /// Draws all waypoints visible on the screen, utilizing batching as much as possible.
+        /// </summary>
         private void DrawWaypoints()
         {
-            Map.Waypoints.ForEach(DrawWaypoint);
+            waypointsToRender.Clear();
+
+            // Instead of drawing one waypoint at a time, we draw the same-texture element of
+            // all waypoints at once, and iterate through the waypoints multiple times.
+            // While it seems heavier, this approach allows MonoGame's SpriteBatch to batch
+            // the draw calls, making the process much lighter in practice.
+
+            // Gather waypoints to draw
+            for (int i = 0; i < Map.Waypoints.Count; i++)
+            {
+                var waypoint = Map.Waypoints[i];
+
+                Point2D drawPoint = CellMath.CellTopLeftPointFromCellCoords(waypoint.Position, Map);
+
+                var cell = Map.GetTile(waypoint.Position);
+                if (cell != null && !EditorState.Is2DMode)
+                    drawPoint -= new Point2D(0, cell.Level * Constants.CellHeight);
+
+                if (MinimapUsers.Count == 0 &&
+                    (Camera.TopLeftPoint.X > drawPoint.X + EditorGraphics.TileBorderTexture.Width ||
+                    Camera.TopLeftPoint.Y > drawPoint.Y + EditorGraphics.TileBorderTexture.Height ||
+                    GetCameraRightXCoord() < drawPoint.X ||
+                    GetCameraBottomYCoord() < drawPoint.Y))
+                {
+                    // This waypoint is outside the camera
+                    continue;
+                }
+
+                Color waypointColor = string.IsNullOrEmpty(waypoint.EditorColor) ? Color.Fuchsia : waypoint.XNAColor;
+                var drawRectangle = new Rectangle(drawPoint.X, drawPoint.Y, EditorGraphics.GenericTileTexture.Width, EditorGraphics.GenericTileTexture.Height);
+
+                waypointsToRender.Add(new WaypointDrawStruct(waypoint, waypointColor, drawRectangle));
+            }
+
+            // Draw darkened background for all waypoints
+            for (int i = 0; i < waypointsToRender.Count; i++)
+            {
+                var waypoint = waypointsToRender[i];
+
+                Renderer.DrawTexture(EditorGraphics.GenericTileTexture, waypoint.DrawRectangle, new Color(0, 0, 0, 128));
+            }
+
+            // Draw tile border for all waypoints
+            for (int i = 0; i < waypointsToRender.Count; i++)
+            {
+                var waypoint = waypointsToRender[i];
+
+                Renderer.DrawTexture(EditorGraphics.TileBorderTexture, waypoint.DrawRectangle, waypoint.Color);
+            }
+
+            // Draw text for all waypoints
+            for (int i = 0; i < waypointsToRender.Count; i++)
+            {
+                int fontIndex = Constants.UIBoldFont;
+                string waypointIdentifier = waypointsToRender[i].Waypoint.Identifier.ToString();
+                var textDimensions = Renderer.GetTextDimensions(waypointIdentifier, fontIndex);
+                Renderer.DrawStringWithShadow(waypointIdentifier, fontIndex,
+                    new Vector2(waypointsToRender[i].DrawRectangle.X + ((Constants.CellSizeX - textDimensions.X) / 2),
+                    waypointsToRender[i].DrawRectangle.Y + ((Constants.CellSizeY - textDimensions.Y) / 2)),
+                    waypointsToRender[i].Color);
+            }
+        }
+
+        private void DrawWaypoint(Waypoint waypoint)
+        {
+            Point2D drawPoint = CellMath.CellTopLeftPointFromCellCoords(waypoint.Position, Map);
+
+            var cell = Map.GetTile(waypoint.Position);
+            if (cell != null && !EditorState.Is2DMode)
+                drawPoint -= new Point2D(0, cell.Level * Constants.CellHeight);
+
+            if (MinimapUsers.Count == 0 &&
+                (Camera.TopLeftPoint.X > drawPoint.X + EditorGraphics.TileBorderTexture.Width ||
+                Camera.TopLeftPoint.Y > drawPoint.Y + EditorGraphics.TileBorderTexture.Height ||
+                GetCameraRightXCoord() < drawPoint.X ||
+                GetCameraBottomYCoord() < drawPoint.Y))
+            {
+                // This waypoint is outside the camera
+                return;
+            }
+
+            Color waypointColor = string.IsNullOrEmpty(waypoint.EditorColor) ? Color.Fuchsia : waypoint.XNAColor;
+            var drawRectangle = new Rectangle(drawPoint.X, drawPoint.Y, EditorGraphics.GenericTileTexture.Width, EditorGraphics.GenericTileTexture.Height);
+
+            Renderer.DrawTexture(EditorGraphics.GenericTileTexture, drawRectangle, new Color(0, 0, 0, 128));
+            Renderer.DrawTexture(EditorGraphics.TileBorderTexture, drawRectangle, waypointColor);
+
+            int fontIndex = Constants.UIBoldFont;
+            string waypointIdentifier = waypoint.Identifier.ToString();
+            var textDimensions = Renderer.GetTextDimensions(waypointIdentifier, fontIndex);
+            Renderer.DrawStringWithShadow(waypointIdentifier,
+                fontIndex,
+                new Vector2(drawPoint.X + ((Constants.CellSizeX - textDimensions.X) / 2), drawPoint.Y + ((Constants.CellSizeY - textDimensions.Y) / 2)),
+                waypointColor);
         }
 
         private void DrawCellTags()
@@ -864,6 +976,7 @@ namespace TSMapEditor.Rendering
             }
 
             ProcessObjectSpriteRecord(false, true, false);
+            objectSpriteRecord.Clear(false);
         }
 
         private void DrawObject(GameObject gameObject)
@@ -989,15 +1102,19 @@ namespace TSMapEditor.Rendering
 
         private void DrawBaseNodes()
         {
-            Renderer.PushSettings(new SpriteBatchSettings(SpriteSortMode.Immediate, BlendState.Opaque, null, null, null, palettedColorDrawEffect));
-            foreach (var baseNode in Map.GraphicalBaseNodes)
+            if (Map.GraphicalBaseNodes.Count > 0)
             {
-                DrawBaseNode(baseNode);
+                foreach (var baseNode in Map.GraphicalBaseNodes)
+                {
+                    RecordBaseNode(baseNode);
+                }
+
+                ProcessObjectSpriteRecord(false, false, false);
+                objectSpriteRecord.Clear(false);
             }
-            Renderer.PopSettings();
         }
 
-        private void DrawBaseNode(GraphicalBaseNode graphicalBaseNode)
+        private void RecordBaseNode(GraphicalBaseNode graphicalBaseNode)
         {
             // TODO add base nodes to the regular rendering code
 
@@ -1015,7 +1132,7 @@ namespace TSMapEditor.Rendering
                 return;
             }
 
-            const float opacity = 0.25f;
+            const float opacity = 0.35f;
 
             ShapeImage bibGraphics = TheaterGraphics.BuildingBibTextures[graphicalBaseNode.BuildingType.Index];
             ShapeImage graphics = TheaterGraphics.BuildingTextures[graphicalBaseNode.BuildingType.Index];
@@ -1028,9 +1145,8 @@ namespace TSMapEditor.Rendering
 
             if ((graphics == null || graphics.GetFrame(frameIndex) == null) && (bibGraphics == null || bibGraphics.GetFrame(0) == null))
             {
-                SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, false);
-                Renderer.DrawStringWithShadow(iniName, Constants.UIBoldFont, drawPoint.ToXNAVector(), replacementColor, 1.0f);
-                Renderer.DrawStringWithShadow("#" + baseNodeIndex, Constants.UIBoldFont, drawPoint.ToXNAVector() + new Vector2(0f, 20f), baseNodeIndexColor);
+                objectSpriteRecord.AddTextEntry(new TextEntry(iniName, replacementColor, drawPoint));
+                objectSpriteRecord.AddTextEntry(new TextEntry("# " + baseNodeIndex, baseNodeIndexColor, drawPoint + new Point2D(0, 20)));
                 return;
             }
 
@@ -1050,24 +1166,17 @@ namespace TSMapEditor.Rendering
                     int bibFinalDrawPointX = drawPoint.X - bibFrame.ShapeWidth / 2 + bibFrame.OffsetX + Constants.CellSizeX / 2;
                     int bibFinalDrawPointY = drawPoint.Y - bibFrame.ShapeHeight / 2 + bibFrame.OffsetY + Constants.CellSizeY / 2 + yDrawOffset;
 
-                    SetPaletteEffectParams(palettedColorDrawEffect, bibGraphics.GetPaletteTexture(), true, true, false);
-
-                    Renderer.DrawTexture(texture, new Rectangle(
-                        bibFinalDrawPointX, bibFinalDrawPointY,
+                    objectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(bibGraphics.GetPaletteTexture(), bibFrame,
+                        new Rectangle(bibFinalDrawPointX, bibFinalDrawPointY,
                         bibFrame.SourceRectangle.Width, bibFrame.SourceRectangle.Height),
-                        bibFrame.SourceRectangle, remapColor,
-                        0f, Vector2.Zero, SpriteEffects.None, 0f);
+                        remapColor, false, false, new DepthRectangle(1f, 1f)));
 
                     if (bibGraphics.HasRemapFrames())
                     {
-                        Renderer.DrawTexture(bibGraphics.GetRemapFrame(0).Texture,
-                            new Rectangle(bibFinalDrawPointX, bibFinalDrawPointY, bibFrame.SourceRectangle.Width, bibFrame.SourceRectangle.Height),
-                            bibGraphics.GetRemapFrame(0).SourceRectangle,
-                            remapColor,
-                            0f,
-                            Vector2.Zero,
-                            SpriteEffects.None,
-                            0f);
+                        objectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(bibGraphics.GetPaletteTexture(), bibGraphics.GetRemapFrame(0),
+                            new Rectangle(bibFinalDrawPointX, bibFinalDrawPointY,
+                            bibFrame.SourceRectangle.Width, bibFrame.SourceRectangle.Height),
+                            remapColor, true, false, new DepthRectangle(1f, 1f)));
                     }
                 }
             }
@@ -1075,8 +1184,7 @@ namespace TSMapEditor.Rendering
             var frame = graphics.GetFrame(frameIndex);
             if (frame == null)
             {
-                SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, false);
-                Renderer.DrawStringWithShadow("#" + baseNodeIndex, Constants.UIBoldFont, drawPoint.ToXNAVector(), baseNodeIndexColor);
+                objectSpriteRecord.AddTextEntry(new TextEntry("#" + baseNodeIndex, baseNodeIndexColor, drawPoint));
                 return;
             }
 
@@ -1086,50 +1194,15 @@ namespace TSMapEditor.Rendering
             int y = drawPoint.Y - frame.ShapeHeight / 2 + frame.OffsetY + Constants.CellSizeY / 2 + yDrawOffset;
             Rectangle drawRectangle = new Rectangle(x, y, frame.SourceRectangle.Width, frame.SourceRectangle.Height);
 
-            SetPaletteEffectParams(palettedColorDrawEffect, graphics.GetPaletteTexture(), true, true, false);
-
-            Renderer.DrawTexture(texture, frame.SourceRectangle, drawRectangle, remapColor);
+            objectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(graphics.GetPaletteTexture(), texture, frame.SourceRectangle, drawRectangle, remapColor, false, false, new DepthRectangle(1f, 1f)));
 
             if (graphics.HasRemapFrames())
             {
-                Renderer.DrawTexture(graphics.GetRemapFrame(frameIndex).Texture, graphics.GetRemapFrame(frameIndex).SourceRectangle, drawRectangle, remapColor);
+                objectSpriteRecord.AddGraphicsEntry(new ObjectSpriteEntry(graphics.GetPaletteTexture(), graphics.GetRemapFrame(frameIndex).Texture, 
+                    graphics.GetRemapFrame(frameIndex).SourceRectangle, drawRectangle, remapColor, true, false, new DepthRectangle(1f, 1f)));
             }
 
-            SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, false);
-            Renderer.DrawStringWithShadow("#" + baseNodeIndex, Constants.UIBoldFont, drawPoint.ToXNAVector(), baseNodeIndexColor);
-        }
-
-        private void DrawWaypoint(Waypoint waypoint)
-        {
-            Point2D drawPoint = CellMath.CellTopLeftPointFromCellCoords(waypoint.Position, Map);
-
-            var cell = Map.GetTile(waypoint.Position);
-            if (cell != null && !EditorState.Is2DMode)
-                drawPoint -= new Point2D(0, cell.Level * Constants.CellHeight);
-
-            if (MinimapUsers.Count == 0 &&
-                (Camera.TopLeftPoint.X > drawPoint.X + EditorGraphics.TileBorderTexture.Width ||
-                Camera.TopLeftPoint.Y > drawPoint.Y + EditorGraphics.TileBorderTexture.Height ||
-                GetCameraRightXCoord() < drawPoint.X ||
-                GetCameraBottomYCoord() < drawPoint.Y))
-            {
-                // This waypoint is outside the camera
-                return;
-            }
-
-            Color waypointColor = string.IsNullOrEmpty(waypoint.EditorColor) ? Color.Fuchsia : waypoint.XNAColor;
-            var drawRectangle = new Rectangle(drawPoint.X, drawPoint.Y, EditorGraphics.GenericTileTexture.Width, EditorGraphics.GenericTileTexture.Height);
-
-            Renderer.DrawTexture(EditorGraphics.GenericTileTexture, drawRectangle, new Color(0, 0, 0, 128));
-            Renderer.DrawTexture(EditorGraphics.TileBorderTexture, drawRectangle, waypointColor);
-
-            int fontIndex = Constants.UIBoldFont;
-            string waypointIdentifier = waypoint.Identifier.ToString();
-            var textDimensions = Renderer.GetTextDimensions(waypointIdentifier, fontIndex);
-            Renderer.DrawStringWithShadow(waypointIdentifier,
-                fontIndex,
-                new Vector2(drawPoint.X + ((Constants.CellSizeX - textDimensions.X) / 2), drawPoint.Y + ((Constants.CellSizeY - textDimensions.Y) / 2)),
-                waypointColor);
+            objectSpriteRecord.AddTextEntry(new TextEntry("#" + baseNodeIndex, baseNodeIndexColor, drawPoint));
         }
 
         private void DrawCellTag(CellTag cellTag)
