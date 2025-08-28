@@ -244,7 +244,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             return null;
         }
 
-        protected Rectangle GetTextureDrawCoords(T gameObject,
+        protected Rectangle GetTextureDrawCoords(GameObject gameObject,
             PositionedTexture frame,
             Point2D initialDrawPoint)
         {

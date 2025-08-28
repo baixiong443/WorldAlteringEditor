@@ -303,10 +303,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                     var animShape = TheaterGraphics.AnimTextures[anim.AnimType.Index];
                     if (animShape != null)
                     {
-                        DrawAnimationImage(gameObject, animShape, anim.GetFrameIndex(animShape.GetFrameCount()),
+                        DrawAnimationImage(gameObject, anim, animShape, anim.GetFrameIndex(animShape.GetFrameCount()),
                             nonRemapColor, true, gameObject.GetRemapColor(), affectedByLighting, affectedByAmbient,
-                            drawPoint + new Point2D(anim.BuildingAnimDrawConfig.X, anim.BuildingAnimDrawConfig.Y),
-                            depthAddition);
+                            drawPoint, depthAddition);
                     }
 
                     //buildingAnimRenderer.BuildingAnimDepthAddition = depthAddition - Constants.DepthEpsilon;
@@ -344,10 +343,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
                     if (animShape != null)
                     {
-                        DrawAnimationImage(gameObject, animShape, anim.GetFrameIndex(animShape.GetFrameCount()),
+                        DrawAnimationImage(gameObject, anim, animShape, anim.GetFrameIndex(animShape.GetFrameCount()),
                             nonRemapColor, true, gameObject.GetRemapColor(), affectedByLighting, affectedByAmbient,
-                            drawPoint + new Point2D(anim.BuildingAnimDrawConfig.X, anim.BuildingAnimDrawConfig.Y),
-                            depthAddition);
+                            drawPoint, depthAddition);
                     }
 
                     // float animDepthAddition = depthAddition;
@@ -447,7 +445,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             }
         }
 
-        private void DrawAnimationImage(Structure gameObject, ShapeImage image, int frameIndex, Color color,
+        private void DrawAnimationImage(Structure gameObject, Animation animation, ShapeImage image, int frameIndex, Color color,
             bool drawRemap, Color remapColor, bool affectedByLighting, bool affectedByAmbient, Point2D drawPoint,
             float depthAddition = 0f)
         {
@@ -462,7 +460,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             if (drawRemap && image.HasRemapFrames())
                 remapFrame = image.GetRemapFrame(frameIndex);
 
-            Rectangle drawingBounds = GetTextureDrawCoords(gameObject, frame, drawPoint);
+            Rectangle drawingBounds = GetTextureDrawCoords(animation, frame, drawPoint);
 
             double extraLight = GetExtraLight(gameObject);
 
