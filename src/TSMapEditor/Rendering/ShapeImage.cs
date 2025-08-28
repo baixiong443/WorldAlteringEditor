@@ -150,11 +150,24 @@ namespace TSMapEditor.Rendering
                         return (byte)0;
                     }).ToArray();
 
-                    var remapTexture = new PositionedTexture(shpFile.Width, shpFile.Height, frameInfo.XOffset, frameInfo.YOffset, null, Rectangle.Empty);
+                    bool hasRemap = false;
+                    for (int b = 0; b < remapColorArray.Length; b++)
+                    {
+                        if (remapColorArray[b] != 0)
+                        {
+                            hasRemap = true;
+                            break;
+                        }
+                    }
 
-                    offset = graphicsPreparationObject.AddImage(frameInfo.Width, frameInfo.Height, remapColorArray, remapTexture);
-                    remapTexture.SourceRectangle = new Rectangle(offset.X, offset.Y, frameInfo.Width, frameInfo.Height);
-                    RemapFrames[i] = remapTexture;
+                    if (hasRemap)
+                    {
+                        var remapTexture = new PositionedTexture(shpFile.Width, shpFile.Height, frameInfo.XOffset, frameInfo.YOffset, null, Rectangle.Empty);
+
+                        offset = graphicsPreparationObject.AddImage(frameInfo.Width, frameInfo.Height, remapColorArray, remapTexture);
+                        remapTexture.SourceRectangle = new Rectangle(offset.X, offset.Y, frameInfo.Width, frameInfo.Height);
+                        RemapFrames[i] = remapTexture;
+                    }
                 }
             }
         }
