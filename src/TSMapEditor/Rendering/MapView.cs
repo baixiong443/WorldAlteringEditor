@@ -1015,13 +1015,13 @@ namespace TSMapEditor.Rendering
                 return;
             }
 
+            const float opacity = 0.25f;
+
             ShapeImage bibGraphics = TheaterGraphics.BuildingBibTextures[graphicalBaseNode.BuildingType.Index];
             ShapeImage graphics = TheaterGraphics.BuildingTextures[graphicalBaseNode.BuildingType.Index];
             Color replacementColor = Color.DarkBlue;
             string iniName = graphicalBaseNode.BuildingType.ININame;
-            Color remapColor = graphicalBaseNode.BuildingType.ArtConfig.Remapable ? graphicalBaseNode.Owner.XNAColor : Color.White;
-
-            const float opacity = 0.25f;
+            Color remapColor = (graphicalBaseNode.BuildingType.ArtConfig.Remapable ? graphicalBaseNode.Owner.XNAColor : Color.White) * opacity;
 
             int yDrawOffset = Constants.CellSizeY / -2;
             int frameIndex = 0;
