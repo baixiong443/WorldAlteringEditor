@@ -158,9 +158,10 @@ namespace TSMapEditor.Rendering
         private Rectangle mapRenderSourceRectangle;
         private Rectangle mapRenderDestinationRectangle;
 
-        private DepthStencilState depthRenderStencilState;
-        private DepthStencilState objectRenderStencilState;
-        private DepthStencilState shadowRenderStencilState;
+        private DepthStencilState depthRenderStencilState;  // Depth stencil state for rendering terrain. Reads and writes depth information.
+        private DepthStencilState depthReadStencilState;    // Depth stencil state for rendering smudges and flat overlays. Reads depth information, but does not write it.
+        private DepthStencilState objectRenderStencilState; // Depth stencil state for rendering objects. Reads and writes depth information. Also writes stencil information for shadow rendering.
+        private DepthStencilState shadowRenderStencilState; // Depth stencil state for rendering shadows. Reads depth information. Also reads stencil information to avoid shadowing objects (the C&C engine does allow shadows on objects either).
 
         public void AddRefreshPoint(Point2D point, int size = 1)
         {
@@ -313,6 +314,16 @@ namespace TSMapEditor.Rendering
                 };
             }
 
+            if (depthReadStencilState == null)
+            {
+                depthReadStencilState = new DepthStencilState()
+                {
+                    DepthBufferEnable = true,
+                    DepthBufferWriteEnable = false,
+                    DepthBufferFunction = CompareFunction.GreaterEqual,
+                };
+            }
+
             // Depth stencil state for rendering objects.
             // Sets the stencil value in the stencil buffer to prevent shadows from being drawn over objects.
             // While it'd usually look nicer, shadows cannot be cast over objects in the C&C engine.
@@ -408,7 +419,7 @@ namespace TSMapEditor.Rendering
             // At this point of drawing, depth testing is done on depth buffer embedded in the main map render target.
             Renderer.PopRenderTarget();
 
-            var palettedTerrainDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedTerrainDrawEffect);
+            var palettedTerrainDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthReadStencilState, null, palettedTerrainDrawEffect);
             Renderer.PushRenderTarget(mapRenderTarget, palettedTerrainDrawSettings);
 
             // Smudges can be drawn as part of regular terrain.
@@ -418,14 +429,14 @@ namespace TSMapEditor.Rendering
 
             // Flat overlays can also be drawn as part of regular terrain, but they need to use the more complex shader.
             SetPaletteEffectParams(palettedColorDrawEffect, TheaterGraphics.TheaterPalette.GetTexture(), true, false, false);
-            var palettedColorDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthRenderStencilState, null, palettedColorDrawEffect);
+            var palettedColorDrawSettings = new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, depthReadStencilState, null, palettedColorDrawEffect);
             Renderer.PushSettings(palettedColorDrawSettings);
             DrawFlatOverlays();
 
             Renderer.PopRenderTarget();
 
             // Render non-flat objects
-            Renderer.PushRenderTarget(mapRenderTarget);
+            Renderer.PushRenderTarget(mapRenderTarget, new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, objectRenderStencilState, null, palettedColorDrawEffect));
 
             DrawBuildings();
             DrawGameObjects();
@@ -940,7 +951,7 @@ namespace TSMapEditor.Rendering
                 objectSpriteRecord.ProcessedObjects.Add(flatOverlaysToRender[i]);
             }
 
-            ProcessObjectSpriteRecord(false, false, true); // Do not process building shadows yet, let DrawGameObjects do it
+            ProcessObjectSpriteRecord(true, false, true); // Flat overlays do not render to the depth buffer
             objectSpriteRecord.Clear(true);
         }
 
@@ -958,7 +969,7 @@ namespace TSMapEditor.Rendering
                 objectSpriteRecord.ProcessedObjects.Add(structuresToRender[i]);
             }
 
-            ProcessObjectSpriteRecord(true, false, false); // Do not process building shadows yet, let DrawGameObjects do it
+            ProcessObjectSpriteRecord(false, false, false); // Do not process building shadows yet, let DrawGameObjects do it
             objectSpriteRecord.Clear(true);
         }
 
@@ -1015,12 +1026,12 @@ namespace TSMapEditor.Rendering
             }
         }
 
-        private void ProcessObjectSpriteRecord(bool complexDepth, bool processShadows, bool alphaBlendNonPalettedSprites)
+        private void ProcessObjectSpriteRecord(bool noDepthWriting, bool processShadows, bool alphaBlendNonPalettedSprites)
         {
             if (objectSpriteRecord.LineEntries.Count > 0)
             {
                 SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, false);
-                Renderer.PushSettings(new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, objectRenderStencilState, null, palettedColorDrawEffect));
+                Renderer.PushSettings(new SpriteBatchSettings(SpriteSortMode.Deferred, BlendState.Opaque, null, noDepthWriting ? depthReadStencilState : objectRenderStencilState, null, palettedColorDrawEffect));
 
                 for (int i = 0; i < objectSpriteRecord.LineEntries.Count; i++)
                 {
@@ -1041,7 +1052,7 @@ namespace TSMapEditor.Rendering
                 bool isRemap = kvp.Key.Item2;
 
                 SetPaletteEffectParams(palettedColorDrawEffect, paletteTexture, true, isRemap, false);
-                gameObjectBatcher.Begin(palettedColorDrawEffect, objectRenderStencilState);
+                gameObjectBatcher.Begin(palettedColorDrawEffect, noDepthWriting ? depthReadStencilState : objectRenderStencilState);
 
                 for (int i = 0; i < kvp.Value.Count; i++)
                 {
@@ -1056,7 +1067,7 @@ namespace TSMapEditor.Rendering
             if (objectSpriteRecord.NonPalettedSpriteEntries.Count > 0)
             {
                 SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, false);
-                gameObjectBatcher.Begin(palettedColorDrawEffect, alphaBlendNonPalettedSprites ? depthRenderStencilState : objectRenderStencilState);
+                gameObjectBatcher.Begin(palettedColorDrawEffect, noDepthWriting ? depthReadStencilState : objectRenderStencilState);
 
                 for (int i = 0; i < objectSpriteRecord.NonPalettedSpriteEntries.Count; i++)
                 {
@@ -1070,7 +1081,7 @@ namespace TSMapEditor.Rendering
             if (processShadows && objectSpriteRecord.ShadowEntries.Count > 0)
             {
                 SetPaletteEffectParams(palettedColorDrawEffect, null, false, false, true);
-                gameObjectBatcher.Begin(palettedColorDrawEffect, shadowRenderStencilState);
+                gameObjectBatcher.Begin(palettedColorDrawEffect, noDepthWriting ? depthReadStencilState : objectRenderStencilState);
                 GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
                 for (int i = 0; i < objectSpriteRecord.ShadowEntries.Count; i++)
