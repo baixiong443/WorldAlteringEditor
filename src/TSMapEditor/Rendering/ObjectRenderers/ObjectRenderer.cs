@@ -203,9 +203,21 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             // compass it points to top-right / northeast
             rad -= (float)Math.PI / 4.0f;
 
-            var arrowEndPoint = Helpers.VectorFromLengthAndAngle(Constants.CellSizeX / 4, rad);
+            var arrowEndPoint = Helpers.VectorFromLengthAndAngle(Constants.CellSizeY, rad);
             arrowEndPoint += new Vector2(arrowEndPoint.X, 0f); // Isometric perspective
-            RendererExtensions.DrawArrow(cellCenterPoint, cellCenterPoint + arrowEndPoint, Color.Yellow, 1f, 10f, 2);
+
+            Vector2 line = cellCenterPoint + arrowEndPoint - cellCenterPoint;
+            float angle = Helpers.AngleFromVector(line) - (float)Math.PI;
+
+            Vector2 start = cellCenterPoint;
+            Vector2 end = cellCenterPoint + arrowEndPoint;
+            float sideLineLength = 10f;
+            float angleDiff = 1f;
+            int thickness = 2;
+
+            RenderDependencies.ObjectSpriteRecord.AddLineEntry(new LineEntry(start, end, Color.Yellow, thickness, 1f));
+            RenderDependencies.ObjectSpriteRecord.AddLineEntry(new LineEntry(end, end + Helpers.VectorFromLengthAndAngle(sideLineLength, angle + angleDiff), Color.Yellow, thickness, 1f));
+            RenderDependencies.ObjectSpriteRecord.AddLineEntry(new LineEntry(end, end + Helpers.VectorFromLengthAndAngle(sideLineLength, angle - angleDiff), Color.Yellow, thickness, 1f));
         }
 
         private bool IsObjectInCamera(Rectangle drawingBounds)
