@@ -528,7 +528,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
                     DrawVoxelModel(gameObject, drawParams.BarrelVoxel,
                         gameObject.Facing, RampType.None, nonRemapColor, true, gameObject.GetRemapColor(),
-                        affectedByLighting, turretDrawPoint, Constants.DepthEpsilon * 3); // appears to need a 3x multiplier due to float imprecision
+                        affectedByLighting, turretDrawPoint, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret); // appears to need a 3x multiplier due to float imprecision
                 }
                 else
                 {
@@ -538,7 +538,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
                     DrawVoxelModel(gameObject, drawParams.TurretVoxel,
                         gameObject.Facing, RampType.None, nonRemapColor, true, gameObject.GetRemapColor(),
-                        affectedByLighting, turretDrawPoint, Constants.DepthEpsilon * 2); // Turret is always drawn above building
+                        affectedByLighting, turretDrawPoint, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret); // Turret is always drawn above building
                 }
             }
             else if (gameObject.ObjectType.Turret && !gameObject.ObjectType.TurretAnimIsVoxel &&
@@ -546,7 +546,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             {
                 DrawVoxelModel(gameObject, drawParams.BarrelVoxel,
                     gameObject.Facing, RampType.None, nonRemapColor, true, gameObject.GetRemapColor(),
-                    affectedByLighting, drawPoint, Constants.DepthEpsilon);
+                    affectedByLighting, drawPoint, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret);
             }
         }
 

@@ -88,16 +88,16 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                     else
                         RenderTurretShape(gameObject, drawPoint, drawParams, Constants.DepthEpsilon);
                     
-                    RenderVoxelModel(gameObject, drawPoint + turretOffset, drawParams.BarrelVoxel, affectedByLighting, Constants.DepthEpsilon * 2);
+                    RenderVoxelModel(gameObject, drawPoint + turretOffset, drawParams.BarrelVoxel, affectedByLighting, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret);
                 }
                 else
                 {
                     RenderVoxelModel(gameObject, drawPoint + turretOffset, drawParams.BarrelVoxel, affectedByLighting, Constants.DepthEpsilon);
 
                     if (gameObject.UnitType.ArtConfig.Voxel)
-                        RenderVoxelModel(gameObject, drawPoint + turretOffset, drawParams.TurretVoxel, affectedByLighting, Constants.DepthEpsilon * 2);
+                        RenderVoxelModel(gameObject, drawPoint + turretOffset, drawParams.TurretVoxel, affectedByLighting, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret);
                     else
-                        RenderTurretShape(gameObject,  drawPoint, drawParams, Constants.DepthEpsilon * 2);
+                        RenderTurretShape(gameObject,  drawPoint, drawParams, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret);
                 }
             }
         }
