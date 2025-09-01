@@ -10,12 +10,11 @@ namespace TSMapEditor.Rendering.ObjectRenderers
     {
         public BuildingRenderer(RenderDependencies renderDependencies) : base(renderDependencies)
         {
-            buildingAnimRenderer = new AnimRenderer(renderDependencies);
         }
 
         protected override Color ReplacementColor => Color.Yellow;
 
-        private AnimRenderer buildingAnimRenderer;
+        private List<Animation> animationList = new List<Animation>();
 
         DepthRectangle cachedDepth;
 
@@ -302,22 +301,22 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             float depthAddition = Constants.DepthEpsilon * ObjectDepthAdjustments.Building;
 
             // Form the anims list
-            var animsList = new List<Animation>(gameObject.Anims.Length + gameObject.PowerUpAnims.Length + 1);
-            animsList.AddRange(gameObject.Anims);
-            animsList.AddRange(gameObject.PowerUpAnims);
+            animationList.Clear();
+            animationList.AddRange(gameObject.Anims);
+            animationList.AddRange(gameObject.PowerUpAnims);
             if (gameObject.TurretAnim != null)
-                animsList.Add(gameObject.TurretAnim);
-            
+                animationList.Add(gameObject.TurretAnim);
+
             // Sort the anims according to their settings
-            animsList.Sort((anim1, anim2) =>
+            animationList.Sort((anim1, anim2) =>
                 anim1.BuildingAnimDrawConfig.SortValue.CompareTo(anim2.BuildingAnimDrawConfig.SortValue));
 
             bool affectedByAmbient = !affectedByLighting;
 
             // The building itself has an offset of 0, so first draw all anims with sort values < 0
-            for (int i = 0; i < animsList.Count; i++)
+            for (int i = 0; i < animationList.Count; i++)
             {
-                var anim = animsList[i];
+                var anim = animationList[i];
 
                 if (anim.BuildingAnimDrawConfig.SortValue < 0)
                 {
@@ -348,9 +347,9 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                 DrawFoundationLines(gameObject);
 
             // Then draw all anims with sort values >= 0
-            for (int i = 0; i < animsList.Count; i++)
+            for (int i = 0; i < animationList.Count; i++)
             {
-                var anim = animsList[i];
+                var anim = animationList[i];
 
                 if (anim.BuildingAnimDrawConfig.SortValue >= 0)
                 {

@@ -620,13 +620,29 @@ namespace TSMapEditor.Rendering
             }
 
             if ((EditorState.RenderObjectFlags & RenderObjectFlags.Infantry) == RenderObjectFlags.Infantry)
-                tile.DoForAllInfantry(AddGameObjectToRender);
+            {
+                for (int i = 0; i < tile.Infantry.Length; i++)
+                {
+                    if (tile.Infantry[i] != null)
+                        AddGameObjectToRender(tile.Infantry[i]);
+                }
+            }
 
             if ((EditorState.RenderObjectFlags & RenderObjectFlags.Aircraft) == RenderObjectFlags.Aircraft)
-                tile.DoForAllAircraft(AddGameObjectToRender);
+            {
+                for (int i = 0; i < tile.Aircraft.Count; i++)
+                {
+                    AddGameObjectToRender(tile.Infantry[i]);
+                }
+            }
 
             if ((EditorState.RenderObjectFlags & RenderObjectFlags.Vehicles) == RenderObjectFlags.Vehicles)
-                tile.DoForAllVehicles(AddGameObjectToRender);
+            {
+                for (int i = 0; i < tile.Vehicles.Count; i++)
+                {
+                    AddGameObjectToRender(tile.Vehicles[i]);
+                }
+            }
 
             if ((EditorState.RenderObjectFlags & RenderObjectFlags.TerrainObjects) == RenderObjectFlags.TerrainObjects && tile.TerrainObject != null)
             {
