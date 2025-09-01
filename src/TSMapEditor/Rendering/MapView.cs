@@ -248,12 +248,12 @@ namespace TSMapEditor.Rendering
         private void Map_CellLightingModified(object sender, CellLightingEventArgs e)
         {
             if (EditorState.IsLighting && EditorState.LightingPreviewState != LightingPreviewMode.NoLighting)
-                Map.RefreshCellLighting(EditorState.LightingPreviewState, e.AffectedTiles);
+                Map.RefreshCellLighting(EditorState.LightingPreviewState, EditorState.LightDisabledLightSources, e.AffectedTiles);
         }
 
         private void LightingChanged()
         {
-            Map.RefreshCellLighting(EditorState.IsLighting ? EditorState.LightingPreviewState : LightingPreviewMode.NoLighting, null);
+            Map.RefreshCellLighting(EditorState.IsLighting ? EditorState.LightingPreviewState : LightingPreviewMode.NoLighting, EditorState.LightDisabledLightSources, null);
 
             InvalidateMapForMinimap();
             if (Constants.VoxelsAffectedByLighting)

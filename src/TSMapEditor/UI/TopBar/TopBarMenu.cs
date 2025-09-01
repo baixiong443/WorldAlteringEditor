@@ -189,6 +189,8 @@ namespace TSMapEditor.UI.TopBar
                 viewContextMenu.AddItem("Ion Storm Lighting", () => mapUI.EditorState.LightingPreviewState = LightingPreviewMode.IonStorm);
             }
             viewContextMenu.AddItem(" ", null, () => false, null, null);
+            viewContextMenu.AddItem("Toggle Light From Disabled Buildings", () => mapUI.EditorState.LightDisabledLightSources = !mapUI.EditorState.LightDisabledLightSources);
+            viewContextMenu.AddItem(" ", null, () => false, null, null);
             viewContextMenu.AddItem("Toggle Fullscreen Mode", () => KeyboardCommands.Instance.ToggleFullscreen.DoTrigger());
 
             var viewButton = new MenuButton(WindowManager, viewContextMenu);
