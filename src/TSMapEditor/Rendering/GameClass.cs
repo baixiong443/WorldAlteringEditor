@@ -150,8 +150,8 @@ namespace TSMapEditor.Rendering
                 if (Screen.PrimaryScreen.Bounds.Width > (menuRenderWidth + margin) * scaleFactor &&
                     Screen.PrimaryScreen.Bounds.Height > (menuRenderHeight + margin) * scaleFactor)
                 {
-                    menuWidth = menuRenderWidth * 2;
-                    menuHeight = menuRenderHeight * 2;
+                    menuWidth = menuRenderWidth * scaleFactor;
+                    menuHeight = menuRenderHeight * scaleFactor;
                     scaleFactor++;
                 }
                 else
