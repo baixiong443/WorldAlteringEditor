@@ -99,8 +99,6 @@ namespace TSMapEditor.UI
             // We should be the first control to subscribe to this event
             WindowManager.WindowSizeChangedByUser += WindowManager_WindowSizeChangedByUser;
 
-            SetInitialDisplayMode();
-
             InitTheme();
 
             // Keyboard must be initialized before any other controls so it's properly usable
@@ -201,6 +199,8 @@ namespace TSMapEditor.UI
             WindowManager.SetMaximizeBox(true);
             WindowManager.GameClosing += WindowManager_GameClosing;
             KeyboardCommands.Instance.ToggleFullscreen.Triggered += ToggleFullscreen_Triggered;
+
+            SetInitialDisplayMode();
         }
 
         private void SetInitialDisplayMode()
