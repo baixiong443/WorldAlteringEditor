@@ -138,7 +138,7 @@ namespace TSMapEditor.UI.Controls
                     else
                     {
                         string childName = GetChildControlName(control, kvp.Value);
-                        var child = Children.First(cc => cc.Name == childName);
+                        var child = control.Children.First(cc => cc.Name == childName);
                         if (child == null)
                             throw new INIConfigException($"Processing {control.Name} in {nameof(INItializableWindow)}: Unable to find child control {kvp.Value} while calculating layout");
 

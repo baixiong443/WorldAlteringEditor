@@ -228,6 +228,8 @@ namespace TSMapEditor.UI
             RefreshRenderResolution();
             WindowManager.CenterOnScreen();
             WindowManager.SetBorderlessMode(borderless);
+
+            windowController.CenterWindowsOnScreen();
         }
 
         private void ToggleFullscreen_Triggered(object sender, EventArgs e)

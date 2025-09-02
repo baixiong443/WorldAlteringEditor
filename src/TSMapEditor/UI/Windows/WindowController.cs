@@ -246,6 +246,19 @@ namespace TSMapEditor.UI.Windows
             windowParentControl.RenderResolutionChanged += (s, e) => RenderResolutionChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public void CenterWindowsOnScreen()
+        {
+            foreach (var window in Windows)
+            {
+                if (window is INItializableWindow initializableWindow)
+                {
+                    initializableWindow.RefreshLayout();
+                }
+
+                window.CenterOnParent();
+            }
+        }
+
         private void Window_TagOpened(object sender, TagEventArgs e)
         {
             if (e.Tag.Trigger == null)
