@@ -195,7 +195,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
             if (maxDepth < cachedDepth.TopLeft)
                 return cachedDepth;
 
-            cachedDepth = new DepthRectangle(maxDepth, maxDepth);
+            cachedDepth = new DepthRectangle(maxDepth);
 
             return cachedDepth;
         }
@@ -268,6 +268,11 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
             var depthRectangle = new DepthRectangle(depthTopLeft, depthTopRight, depthBottomLeft, depthBottomRight);
             var sourceRect = new Rectangle(texture.SourceRectangle.Right - distRight, texture.SourceRectangle.Y, distRight, texture.SourceRectangle.Height);
+
+            if (depthTopLeft > cachedDepth.TopLeft)
+            {
+                cachedDepth = new DepthRectangle(depthTopLeft);
+            }
 
             return (depthRectangle, sourceRect);
         }
@@ -364,17 +369,6 @@ namespace TSMapEditor.Rendering.ObjectRenderers
                             nonRemapColor, true, gameObject.GetRemapColor(), affectedByLighting, affectedByAmbient,
                             drawPoint, depthAddition);
                     }
-
-                    // float animDepthAddition = depthAddition;
-                    // if (drawParams.ShapeImage != null)
-                    // {
-                    //     var frame = drawParams.ShapeImage.GetFrame(gameObject.GetFrameIndex(drawParams.ShapeImage.GetFrameCount()));
-                    //     if (frame != null && frame.Texture != null)
-                    //         animDepthAddition += ((frame.Texture.Height / 2) + anim.BuildingAnimDrawConfig.Y) / (float)Map.HeightInPixelsWithCellHeight;
-                    // }
-
-                    // buildingAnimRenderer.BuildingAnimDepthAddition = animDepthAddition;
-                    // buildingAnimRenderer.Draw(anim, false);
                 }
             }
 
@@ -528,7 +522,7 @@ namespace TSMapEditor.Rendering.ObjectRenderers
 
                     DrawVoxelModel(gameObject, drawParams.BarrelVoxel,
                         gameObject.Facing, RampType.None, nonRemapColor, true, gameObject.GetRemapColor(),
-                        affectedByLighting, turretDrawPoint, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret); // appears to need a 3x multiplier due to float imprecision
+                        affectedByLighting, turretDrawPoint, Constants.DepthEpsilon * ObjectDepthAdjustments.Turret);
                 }
                 else
                 {
