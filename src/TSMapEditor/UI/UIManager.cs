@@ -229,7 +229,29 @@ namespace TSMapEditor.UI
             WindowManager.CenterOnScreen();
             WindowManager.SetBorderlessMode(borderless);
 
-            windowController.CenterWindowsOnScreen();
+            foreach (var child in Children)
+            {
+                ProcessChildrenForInitialDisplayMode(child);
+            }
+        }
+
+        private void ProcessChildrenForInitialDisplayMode(XNAControl control)
+        {
+            if (control is DarkeningPanel darkeningPanel)
+            {
+                darkeningPanel.SetPositionAndSize();
+            }
+
+            if (control is INItializableWindow initializableWindow)
+            {
+                initializableWindow.RefreshLayout();
+
+                if (initializableWindow.CenterByDefault)
+                    initializableWindow.CenterOnParent();
+            }
+
+            foreach (var child in control.Children)
+                ProcessChildrenForInitialDisplayMode(child);
         }
 
         private void ToggleFullscreen_Triggered(object sender, EventArgs e)
