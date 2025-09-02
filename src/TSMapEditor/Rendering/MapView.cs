@@ -632,7 +632,7 @@ namespace TSMapEditor.Rendering
             {
                 for (int i = 0; i < tile.Aircraft.Count; i++)
                 {
-                    AddGameObjectToRender(tile.Infantry[i]);
+                    AddGameObjectToRender(tile.Aircraft[i]);
                 }
             }
 
