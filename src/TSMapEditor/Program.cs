@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using TSMapEditor.Rendering;
+using TSMapEditor.I18N;
 
 namespace TSMapEditor
 {
@@ -23,7 +24,33 @@ namespace TSMapEditor
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             Environment.CurrentDirectory = Application.StartupPath.Replace('\\', '/');
-            new GameClass().Run();
+            
+            Console.WriteLine("Starting application...");
+            Console.WriteLine($"Current directory: {Environment.CurrentDirectory}");
+            
+            try
+            {
+                // Initialize translation system
+                Console.WriteLine("Initializing translation system...");
+                TranslationManager.Initialize();
+                
+                // Force load Chinese translation
+                Console.WriteLine("Switching to Chinese language...");
+                TranslationManager.SwitchLanguage("zh-CN");
+                
+                // Test culture and translation
+                Console.WriteLine("Testing culture and translation...");
+                TestCulture.TestCurrentCulture();
+
+                Console.WriteLine("Starting GameClass...");
+                new GameClass().Run();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception occurred: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
